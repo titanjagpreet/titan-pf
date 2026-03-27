@@ -1,0 +1,51 @@
+---
+title: "Understanding React Server Components"
+description: "An introduction to React Server Components, how they work, and why they are a game-changer for modern web development."
+date: "2026-03-18"
+tags: ["React", "Next.js", "Web Dev"]
+coverImage: "/assets/profile.jpg"
+---
+
+React Server Components (RSC) represent a fundamental shift in how we build React applications. In this post, we'll explore what they are and why you should care.
+
+## What are Server Components?
+
+Traditionally, React components run on the client (the browser). This means all the JavaScript needed to render the component must be downloaded, parsed, and executed by the user's device.
+
+Server Components, on the other hand, run **exclusively on the server**.
+
+### The Benefits
+
+1. **Zero Bundle Size**: Since they run on the server, their code is never sent to the client.
+2. **Direct Backend Access**: You can securely access databases and file systems directly from your components.
+3. **Automatic Code Splitting**: Client components imported by server components are automatically code-split.
+
+## Example
+
+Here's a simple example of a Server Component fetching data:
+
+```tsx
+// This component runs on the server
+import db from '@/lib/db';
+
+export default async function UserProfile({ id }) {
+  // Direct database access!
+  const user = await db.users.findById(id);
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.bio}</p>
+    </div>
+  );
+}
+```
+
+## When to use Client Components?
+
+You still need Client Components for:
+- Interactivity (onClick, onChange)
+- State and Lifecycle (useState, useEffect)
+- Browser-only APIs (window, document)
+
+By combining Server and Client components, you get the best of both worlds!

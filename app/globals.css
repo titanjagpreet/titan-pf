@@ -1,8 +1,22 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
+  --background: #FBF8E9;
   --foreground: #171717;
+  /* Blog: surfaces aligned with site cream / tech-badge palette */
+  --blog-surface: #F2EFE5;
+  --blog-surface-border: rgba(0, 0, 0, 0.08);
+  
+  /* IDE Code Block Colors (GitHub Light) */
+  --blog-code-bg: #f6f8fa;
+  --blog-code-border: #d0d7de;
+  --blog-code-text: #24292f;
+  
+  --blog-inline-code-bg: #EAE6D8;
+  --blog-inline-code-text: #171717;
 }
 
 @theme inline {
@@ -12,15 +26,166 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #151515;
+  --foreground: #ededed;
+  --blog-surface: #1E1E1E;
+  --blog-surface-border: rgba(255, 255, 255, 0.08);
+  
+  /* IDE Code Block Colors (GitHub Dark) */
+  --blog-code-bg: #0d1117;
+  --blog-code-border: #30363d;
+  --blog-code-text: #c9d1d9;
+  
+  --blog-inline-code-bg: #2A2A2A;
+  --blog-inline-code-text: #ededed;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Visible noise texture overlay - matches original */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+html.dark body::before {
+  opacity: 0.05;
+}
+
+/* View Transitions API for Theme Toggle */
+::view-transition-group(root) {
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Switching to Dark (html has .dark) */
+.dark::view-transition-old(root) {
+  z-index: 1; /* Old light theme static on bottom */
+}
+.dark::view-transition-new(root) {
+  z-index: 2; /* New dark theme expands on top */
+  animation: theme-clip-in 0.6s ease-in-out forwards;
+}
+
+/* Switching to Light (html does not have .dark) */
+:root:not(.dark)::view-transition-old(root) {
+  z-index: 2; /* Old dark theme shrinks on top */
+  animation: theme-clip-out 0.6s ease-in-out forwards;
+}
+:root:not(.dark)::view-transition-new(root) {
+  z-index: 1; /* New light theme static on bottom */
+}
+
+@keyframes theme-clip-in {
+  from {
+    clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+  }
+  to {
+    clip-path: circle(var(--r, 100vw) at var(--x, 50%) var(--y, 50%));
+  }
+}
+
+@keyframes theme-clip-out {
+  from {
+    clip-path: circle(var(--r, 100vw) at var(--x, 50%) var(--y, 50%));
+  }
+  to {
+    clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+  }
+}
+
+/* Blog UI surfaces (TOC card, code blocks) — theme tokens above */
+@layer components {
+  .blog-toc-card {
+    background-color: var(--blog-surface);
+    border: 1px solid var(--blog-surface-border);
+  }
+
+  .blog-code-pre {
+    background-color: var(--blog-code-bg) !important;
+    border: 1px solid var(--blog-code-border);
+    max-width: 100%;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .blog-card-surface {
+    background-color: #ffffff;
+    border: 1px solid rgb(24 24 27 / 0.12);
+  }
+
+  .dark .blog-card-surface {
+    background-color: #1f1f20;
+    border-color: rgb(255 255 255 / 0.1);
+  }
+}
+
+/* MDX / Shiki: keep tokens readable on custom pre backgrounds */
+.mdx-content pre[data-theme],
+.mdx-content pre {
+  --shiki-dark-bg: transparent !important;
+  --shiki-light-bg: transparent !important;
+  color: var(--blog-code-text) !important;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.mdx-content pre code {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Blog post cover — avoids Tailwind aspect class ambiguity in IntelliSense */
+.blog-post-cover {
+  aspect-ratio: 2 / 1;
+}
+
+/* Blog article: code block wrapping inside typography prose */
+.blog-post-article.prose pre {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Shiki line spans: allow long lines to wrap instead of horizontal scroll */
+.mdx-content pre .line {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding-right: 0.25rem;
+  box-sizing: border-box;
 }
