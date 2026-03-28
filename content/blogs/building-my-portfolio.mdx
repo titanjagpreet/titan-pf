@@ -1,46 +1,258 @@
 ---
 title: "Building My Developer Portfolio with Next.js and Tailwind"
-description: "A deep dive into how I built my modern, responsive, and blazing fast developer portfolio using Next.js App Router, Tailwind CSS, and Framer Motion."
+description: "How I stopped over-engineering and built a fast, maintainable portfolio using Next.js, Tailwind, and MDX."
 date: "2026-03-17"
 tags: ["Next.js", "Tailwind", "React"]
 coverImage: "/assets/profile.jpg"
 ---
 
-Welcome to my first blog post! In this article, I'll walk you through the process of building my personal developer portfolio.
+Every developer eventually falls into the same trap.
 
-## Why Next.js?
+You decide it is time to build a new personal website. You want it to be perfect. You want to show off everything you know.
 
-I chose **Next.js** for its powerful features like Server Components, static site generation, and seamless routing. The App Router makes it incredibly easy to build layouts and manage data fetching.
+Three weeks later, you have a custom WebGL background, a complex headless CMS architecture, a global state manager for a static page, and exactly zero actual blog posts.
 
-### Key Features Used
+I have been there. This time, I wanted to do the exact opposite.
 
-1. **App Router**: For intuitive file-system based routing.
-2. **Server Components**: To keep the bundle size small.
-3. **MDX**: For writing these blog posts!
+---
 
-## Styling with Tailwind CSS
+## The actual requirements
 
-Tailwind CSS has completely changed how I write styles. Instead of switching between CSS files and React components, I can style everything directly in my markup.
+Before writing any code, I set a few hard rules for myself. If the project did not satisfy these, it was not worth shipping.
 
-```tsx
-// Example of a styled button
-export function Button() {
-  return (
-    <button className="rounded-lg bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-      Click Me
-    </button>
-  );
-}
+The site needed to be:
+
+* fast by default (minimal client-side JavaScript)
+* frictionless to update (no logging into a dashboard to write a post)
+* visually quiet (let the projects do the talking)
+* simple to maintain after a long break
+
+If adding a new project feels like a chore, I know I will just let the site rot. The tech stack had to serve the content, not the other way around.
+
+That one line ended up guiding every decision I made.
+
+---
+
+## Next.js and the App Router
+
+I chose Next.js. Not because it is the shiny new thing, but because the App Router genuinely solves problems I do not want to think about.
+
+With React Server Components as the default, the mental model shifts.
+
+Instead of:
+
+> "Send an empty shell, fetch data, show a spinner, render the page."
+
+It becomes:
+
+> "Build the page on the server, send the HTML, only hydrate what needs to be clicked."
+
+Most of this portfolio is just static HTML generated on the server. The only things that run JavaScript in your browser are the theme toggle and some minor UI interactions.
+
+That keeps the bundle tiny and the load times instant.
+
+It also keeps my architecture clean:
+
+* static pages and content rendering stay on the server
+* interaction-heavy islands become small client components
+* route-level code splitting happens naturally
+
+I do not have to manually optimize every page. The framework gives me sensible defaults.
+
+---
+
+## Avoiding the CMS trap
+
+The biggest mistake I usually make is over-complicating the content layer.
+
+It is so tempting to wire up a headless CMS. But for a personal blog where I am the only author? It is massive overkill.
+
+I write code in my editor. I want to write my blog posts in my editor.
+
+So, I went with MDX.
+
+```mdx
+# My Blog Post
+
+This is standard markdown, but I can also do this:
+
+<CustomReactComponent />
 ```
 
-## Adding Animations
+All my projects and posts live right inside the repository as local files. When I want to publish something new, I just push a markdown file to GitHub. No databases, no API keys, no dashboard.
 
-To make the site feel alive, I used **Framer Motion**. It's perfect for scroll animations and page transitions.
+That sounds basic, but in practice it is powerful:
 
-> "Good design is obvious. Great design is transparent." - Joe Sparano
+* content changes are versioned with code changes
+* I can review everything in one pull request
+* rollbacks are trivial if I ever mess up a post
+* writing feels like coding, which means I actually enjoy it
 
-## Conclusion
+---
 
-Building this portfolio was a great learning experience. I got to explore the latest features of Next.js and refine my design skills.
+## Styling without the headache
 
-Stay tuned for more posts about web development, open source, and my journey as a developer!
+I used Tailwind CSS. I know it can be polarizing, but for a solo project, nothing beats it.
+
+The main reason? Context switching.
+
+I don't want to jump between `ProjectCard.tsx` and `ProjectCard.module.css`. I don't want to spend five minutes thinking of a semantic class name for a wrapper `div`.
+
+Tailwind keeps me in the flow.
+
+I stuck to a very strict, monochromatic color palette (mostly zinc and white/black). The goal was to build a clean frame. If the UI is too loud, it distracts from the actual case studies I am trying to showcase.
+
+I also leaned into consistency over novelty:
+
+* same spacing rhythm across sections
+* same card language for projects, blogs, and timeline content
+* same typography scale from mobile to desktop
+
+You can make a site feel premium without doing anything flashy. Most of the time, consistency is what people read as quality.
+
+---
+
+## Just enough motion
+
+A completely static site can feel a bit rigid. To soften it up, I brought in Framer Motion.
+
+But there is a fine line between "polished" and "annoying."
+
+Nobody wants to wait two seconds for a paragraph to slowly fade in before they can read it.
+
+I restricted animations to:
+
+* subtle fade-ins on initial scroll
+* hover states on cards and buttons
+* smooth transitions between light and dark mode
+
+If you notice the animation, it is probably too slow. It should just feel natural.
+
+---
+
+## Information architecture mattered more than visuals
+
+One thing I underestimated was content structure.
+
+A portfolio is not just "a homepage with some cards." It is a story:
+
+* who you are
+* what you have built
+* how you think
+* how someone can contact you
+
+If those four things are not obvious in under one minute, the design does not matter.
+
+So I split the site into a very clear flow:
+
+1. Hero and short introduction
+2. Project highlights
+3. Case studies for deeper technical context
+4. Work experience and resume
+5. Blog for long-form thinking
+6. Contact call to action
+
+That structure made writing easier too, because each section had a job.
+
+---
+
+## Project case studies: enough depth, not too much
+
+This was a balancing act. I wanted project pages to feel serious and technical, but I did not want to expose every implementation detail publicly.
+
+The format I settled on includes:
+
+* overview
+* what it does
+* technical breakdown
+* key challenges and learnings
+
+That gives recruiters and developers enough signal to understand the engineering decisions without dumping internal details. It also keeps posts readable for non-technical visitors.
+
+---
+
+## Performance checks I actually cared about
+
+I did not chase perfect benchmark screenshots. I focused on practical outcomes:
+
+* pages should feel instant on repeat visits
+* no visible layout shifts while content loads
+* interactions should feel responsive on mid-range devices
+
+A few low-effort wins made a big difference:
+
+* server-rendered content by default
+* optimized images through Next.js image handling
+* minimal client-only components
+* no heavy runtime libraries unless they added clear value
+
+In other words, I optimized for user perception, not vanity metrics.
+
+---
+
+## What I intentionally did not build
+
+This part is important. Good engineering is often about what you skip.
+
+I intentionally avoided:
+
+* adding a full CMS
+* adding auth for an admin panel
+* adding complicated analytics dashboards
+* adding fancy visual effects that hurt readability
+
+Could I build those? Yes.
+
+Did this project need them? Not at all.
+
+Scope control is what kept this project shippable.
+
+---
+
+## The workflow that made updates easy
+
+My update workflow is simple:
+
+1. edit project or blog content files
+2. preview locally
+3. commit and push
+4. deploy
+
+That is it.
+
+No content migrations. No schema updates. No extra backend for "portfolio administration."
+
+This reduced maintenance stress a lot. If I get busy for three weeks and come back, I can still understand the project in minutes.
+
+---
+
+## Human side of this project
+
+I used to treat portfolios like technical showcases where every section had to prove I knew another tool.
+
+Now I see it differently.
+
+A portfolio is a communication product first, and a codebase second.
+
+If someone lands on the site and immediately understands what I build, how I think, and how to contact me, then it is doing its job.
+
+That mindset made the writing better, the design cleaner, and the overall project much easier to maintain.
+
+---
+
+## What I would improve next
+
+Building a portfolio is less about proving how many complex tools you can string together, and more about proving you know how to pick the right tool for the job.
+
+This iteration of my site feels different than my past attempts.
+
+It doesn't feel like a heavy application I need to maintain. It just feels like a folder of text files that happens to look really good on the internet.
+
+Next iterations I am considering:
+
+* better image assets for project cards
+* a more polished SEO and social preview setup for each post
+* richer writing on architecture decisions inside case studies
+* lightweight usage analytics focused on privacy
+
+And honestly, that is exactly what a developer portfolio should be: clear, fast, and easy to evolve over time.

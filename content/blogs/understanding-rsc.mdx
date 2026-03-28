@@ -1,35 +1,66 @@
 ---
-title: "Understanding React Server Components"
-description: "An introduction to React Server Components, how they work, and why they are a game-changer for modern web development."
-date: "2026-03-18"
+title: "Understanding React Server Components (the way you actually use them)"
+description: "A practical guide to React Server Components, moving past the buzzwords to understand how they actually change the way we build apps."
+date: "2026-03-27"
 tags: ["React", "Next.js", "Web Dev"]
-coverImage: "/assets/profile.jpg"
+coverImage: "/assets/react-sc.avif"
 ---
 
-React Server Components (RSC) represent a fundamental shift in how we build React applications. In this post, we'll explore what they are and why you should care.
+When I first read about React Server Components, it sounded simple:
 
-## What are Server Components?
+“components that run on the server”
 
-Traditionally, React components run on the client (the browser). This means all the JavaScript needed to render the component must be downloaded, parsed, and executed by the user's device.
+But that description doesn’t really help when you start building something real. The confusion usually starts the moment you ask:
 
-Server Components, on the other hand, run **exclusively on the server**.
+**“wait… where should this logic actually go?”**
 
-### The Benefits
+---
 
-1. **Zero Bundle Size**: Since they run on the server, their code is never sent to the client.
-2. **Direct Backend Access**: You can securely access databases and file systems directly from your components.
-3. **Automatic Code Splitting**: Client components imported by server components are automatically code-split.
+## What changes with Server Components?
 
-## Example
+In a typical React app, everything runs in the browser.
 
-Here's a simple example of a Server Component fetching data:
+You fetch data using `useEffect`, manage loading states, and ship a decent amount of JavaScript just to render a page. It works, but it also means:
+
+* your bundle grows fast
+* your UI waits on client-side fetching
+* you end up writing a lot of boilerplate
+
+Server Components flip this a bit.
+
+Instead of thinking:
+
+> “render UI, then fetch data”
+
+you start thinking:
+
+> “fetch data on the server, then send ready UI”
+
+That shift is the whole point.
+
+---
+
+## What actually happens (without the buzzwords)
+
+Server Components don’t behave like traditional SSR where you just send HTML.
+
+What really happens is:
+
+* the server runs your component
+* fetches all required data
+* returns a serialized component tree (not plain HTML)
+* the client hydrates only the interactive parts
+
+So instead of hydrating everything, you only hydrate what actually needs it.
+
+---
+
+## A simple example
 
 ```tsx
-// This component runs on the server
 import db from '@/lib/db';
 
 export default async function UserProfile({ id }) {
-  // Direct database access!
   const user = await db.users.findById(id);
 
   return (
@@ -41,11 +72,124 @@ export default async function UserProfile({ id }) {
 }
 ```
 
-## When to use Client Components?
+No API route.
+No `useEffect`.
+No loading state on the client.
 
-You still need Client Components for:
-- Interactivity (onClick, onChange)
-- State and Lifecycle (useState, useEffect)
-- Browser-only APIs (window, document)
+That’s the first moment where it clicks - you’re not moving faster, you’re removing entire layers.
 
-By combining Server and Client components, you get the best of both worlds!
+---
+
+## Where it starts to feel useful
+
+The real benefit isn’t “server vs client.” It’s **less JavaScript shipped to the browser**.
+
+Anything inside a Server Component:
+
+* doesn’t increase bundle size
+* doesn’t run on the client
+* doesn’t need hydration
+
+For data-heavy pages, this makes a noticeable difference.
+
+Especially if you’re building dashboards or anything similar.
+
+---
+
+## The mistake most people make
+
+When you first get comfortable with Server Components, it’s tempting to push everything there.
+
+That usually backfires.
+
+You either:
+
+* lose interactivity
+* or start re-fetching too often from the server
+
+The better approach is to split responsibilities cleanly.
+
+---
+
+## A practical way to think about it
+
+* Server Components → data, layout, structure
+* Client Components → interaction, state, events
+
+Something like this works well:
+
+```text
+Page (Server)
+ ├── Data-heavy sections (Server)
+ └── Interactive parts (Client)
+```
+
+Once you follow this consistently, things start to feel predictable again.
+
+---
+
+## When you still need Client Components
+
+You can’t avoid them.
+
+Any time you need:
+
+* `useState` or `useEffect`
+* click handlers
+* animations
+* browser APIs
+
+you’re back on the client.
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+
+export function FollowButton() {
+  const [loading, setLoading] = useState(false);
+
+  return <button>Follow</button>;
+}
+```
+
+---
+
+## Tradeoffs (this part matters)
+
+Server Components are great, but they’re not magic.
+
+Some real downsides:
+
+* harder mental model at first
+* debugging isn’t as straightforward
+* not ideal for highly interactive UIs
+* tied closely to frameworks like Next.js
+
+You don’t feel these in tutorials, but you do in real projects.
+
+---
+
+## What changed for me
+
+The biggest shift wasn’t technical, it was how I think about data.
+
+Before:
+
+> fetch on the client, then render
+
+Now:
+
+> render with data already available
+
+That one change removes a lot of unnecessary complexity.
+
+---
+
+## Final thought
+
+Server Components don’t make React easier - they just move complexity to a better place.
+
+If you’re using Next.js App Router, you don’t really have the option to ignore them anymore. But once you get past the initial confusion, they start to feel natural.
+
+Not because they’re magical, but because they remove work you didn’t need to do in the first place.

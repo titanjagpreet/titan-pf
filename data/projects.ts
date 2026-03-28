@@ -95,6 +95,7 @@ export const projects: Project[] = [
   },
   {
     slug: "lighter-liquidations",
+    imageUrl: "/assets/liquidations.png",
     title: "Lighter Liquidations",
     description:
       "Backend service for Lighter.xyz that ingests perpetuals liquidation events over WebSockets, deduplicates noisy replay batches, aggregates notional USD into per-minute buckets in Upstash Redis, and serves a rolling 24 hour liquidation total over HTTP.",
@@ -249,6 +250,7 @@ export const projects: Project[] = [
   },
   {
     slug: "live-cursors",
+    imageUrl: "/assets/live-cursors.png",
     title: "Live Cursors",
     description:
       "Real-time collaborative cursors over WebSockets: throttled pointer streams, broadcast fan-out, and Bézier-smoothed rendering with perfect-cursors and GPU-friendly SVG transforms.",
