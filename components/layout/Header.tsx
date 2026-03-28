@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { siteConfig } from "@/data/site";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -38,13 +37,13 @@ export function Header() {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <div className="flex items-center gap-2">
-            <a
-              href={`mailto:${siteConfig.email}`}
+            <Link
+              href="/contact"
               className="flex min-h-[40px] items-center gap-2 rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               <Mail className="h-4 w-4" />
               Contact
-            </a>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -75,13 +74,13 @@ export function Header() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <a
-              href={`mailto:${siteConfig.email}`}
+            <Link
+              href="/contact"
               className="flex items-center gap-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               <Mail className="h-4 w-4" />
               Contact
-            </a>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -127,14 +126,14 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <a
-              href={`mailto:${siteConfig.email}`}
+            <Link
+              href="/contact"
               onClick={() => setMobileOpen(false)}
               className="flex min-h-[48px] items-center gap-2 rounded-xl bg-zinc-900 px-4 text-base font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               <Mail className="h-4 w-4" />
               Contact
-            </a>
+            </Link>
           </motion.nav>
         )}
       </AnimatePresence>
