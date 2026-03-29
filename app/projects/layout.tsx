@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Projects - My Work & Projects Portfolio",
+  title: "Projects",
   description:
-    "My projects and work across different technologies and domains.",
+    "Selected projects and case studies across full stack, Web3, and real-time systems.",
 };
 
 export default function ProjectsLayout({

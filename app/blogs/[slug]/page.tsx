@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         : undefined;
 
     return {
-      title: `${blog.title} | Jagpreet Singh`,
+      title: blog.title,
       description: blog.description,
       openGraph: {
         title: blog.title,

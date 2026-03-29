@@ -51,7 +51,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggleTheme}
       className={cn(
         "rounded-full p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center sm:min-h-0 sm:min-w-0 sm:p-1.5",
-        "border border-zinc-300 dark:border-white/8",
+        "border border-zinc-300 dark:border-white/[0.08]",
         "bg-transparent hover:bg-zinc-200 dark:hover:bg-white/10",
         className
       )}

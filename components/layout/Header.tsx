@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +18,24 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
+
   return (
     <>
       <motion.header
@@ -28,9 +46,10 @@ export function Header() {
       >
         {/* Mobile: split layout — hamburger left, Contact + theme right */}
         <div className="flex items-center justify-between sm:hidden">
-            <button
-              onClick={() => setMobileOpen((o) => !o)}
-              className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-zinc-300 bg-white/80 text-zinc-600 backdrop-blur-xl transition-colors hover:bg-zinc-100 dark:border-white/[0.08] dark:bg-[rgba(30,30,30,0.6)] dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-200"
+          <button
+            type="button"
+            onClick={() => setMobileOpen((o) => !o)}
+            className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full border border-zinc-300 bg-white/80 text-zinc-600 backdrop-blur-xl transition-colors hover:bg-zinc-100 dark:border-white/[0.08] dark:bg-[rgba(30,30,30,0.6)] dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-200"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >

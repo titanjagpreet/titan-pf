@@ -5,8 +5,9 @@ import { SECTION_WIDTH } from "@/lib/constants";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blogs | Jagpreet Singh",
-  description: "Thoughts, tutorials, and insights on web development, tech, and more.",
+  title: "Blogs",
+  description:
+    "Thoughts, tutorials, and notes on web development, Next.js, React, and building products.",
 };
 
 export default function BlogsPage() {

@@ -53,6 +53,16 @@ body {
   overflow-x: hidden;
 }
 
+/* Keyboard focus: visible ring without changing mouse click outline */
+:focus-visible {
+  outline: 2px solid rgb(113 113 122);
+  outline-offset: 2px;
+}
+
+.dark :focus-visible {
+  outline-color: rgb(161 161 170);
+}
+
 /* Visible noise texture overlay - matches original */
 body::before {
   content: "";
