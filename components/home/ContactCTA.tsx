@@ -1,13 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
+import { getCalApi } from "@calcom/embed-react";
 import { Plus, User } from "lucide-react";
 import { siteConfig } from "@/data/site";
 import { SECTION_WIDTH } from "@/lib/constants";
 
 export function ContactCTA() {
+  useEffect(() => {
+    void (async () => {
+      const cal = await getCalApi();
+      cal("ui", {
+        hideEventTypeDetails: false,
+        layout: "month_view",
+      });
+    })();
+  }, []);
+
   return (
     <section className="py-8 sm:py-10 md:py-16">
       <div className={SECTION_WIDTH}>
@@ -22,12 +33,12 @@ export function ContactCTA() {
           </p>
 
           <div className="mt-6 flex justify-center sm:mt-8">
-            <Link
-              href={siteConfig.calendlyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              data-cal-link={siteConfig.calComBookingPath}
+              data-cal-config='{"layout":"month_view"}'
               aria-label="Book a Free Call"
-              className="group inline-flex rounded-lg border border-zinc-400 bg-zinc-900 shadow-sm transition-[max-width,box-shadow,border-color] duration-500 ease-out hover:border-zinc-300 hover:shadow-md active:scale-[0.98] dark:border-zinc-500 dark:bg-zinc-800 dark:hover:border-zinc-400 dark:hover:bg-zinc-700 max-w-[min(22rem,calc(100vw-3rem))] md:max-w-[min(15rem,calc(100vw-3rem))] md:hover:max-w-[min(22rem,calc(100vw-3rem))] overflow-x-hidden overflow-y-visible"
+              className="group inline-flex cursor-pointer rounded-lg border border-zinc-400 bg-zinc-900 shadow-sm transition-[max-width,box-shadow,border-color] duration-500 ease-out hover:border-zinc-300 hover:shadow-md active:scale-[0.98] dark:border-zinc-500 dark:bg-zinc-800 dark:hover:border-zinc-400 dark:hover:bg-zinc-700 max-w-[min(22rem,calc(100vw-3rem))] md:max-w-[min(15rem,calc(100vw-3rem))] md:hover:max-w-[min(22rem,calc(100vw-3rem))] overflow-x-hidden overflow-y-visible"
             >
               <span className="flex items-center gap-2 px-2 py-1 text-xs font-medium text-white sm:gap-2.5 sm:px-2.5 sm:py-1.5 sm:text-sm">
                 <Image
@@ -49,7 +60,7 @@ export function ContactCTA() {
                 </span>
                 <span className="whitespace-nowrap pr-0.5">Book a Free Call</span>
               </span>
-            </Link>
+            </button>
           </div>
         </motion.div>
       </div>
