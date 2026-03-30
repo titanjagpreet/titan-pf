@@ -23,7 +23,7 @@ export function BlogCard({ blog }: BlogCardProps) {
         <div className="relative aspect-video w-full overflow-hidden border-b border-zinc-300/40 dark:border-white/10">
           <Image
             src={blog.coverImage}
-            alt={blog.title}
+            alt={`Cover image for ${blog.title}`}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />

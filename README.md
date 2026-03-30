@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio
 
-## Getting Started
+A production-ready personal portfolio and blog. The site presents projects (with case studies), MDX-based writing, resume and work history, and contact flows including optional Cal.com scheduling.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Overview
+
+| | |
+| --- | --- |
+| **Framework** | [Next.js](https://nextjs.org/) (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS 4 |
+| **Content** | MDX posts in-repo; project metadata as structured data |
+
+The UI is optimized for clarity and performance: server components by default, client islands for interactivity (theme, motion, embeds), and static generation where it fits.
+
+---
+
+## Features
+
+- **Home** – Hero, featured projects, about, recent posts, GitHub activity, call-to-action
+- **Projects** – Listing and per-project case study pages (overview, technical breakdown, challenges, learnings)
+- **Blog** – MDX with frontmatter, reading time, and related posts
+- **Resume & experience** – Dedicated pages for CV download and timeline content
+- **Contact** – Contact page plus Cal.com “Book a call” integration (configurable)
+- **SEO** – Metadata, Open Graph, `sitemap.xml`, `robots.txt`, canonical URL support
+
+---
+
+## Repository layout
+
+```
+app/                 # Routes, layouts, API routes
+components/          # UI by feature (home, blog, projects, layout)
+content/blogs/       # MDX blog posts
+data/                # site.ts, projects.ts, shared config
+lib/                 # MDX helpers, utilities, site URL helper
+public/assets/       # Static assets (images, PDFs)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Requirements:** Node.js 20+ recommended (align with your deployment target).
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Optimized production build |
+| `npm run start` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Public site origin (e.g. `https://example.com`). Used for canonical URLs, sitemap, and Open Graph when deployed. |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Site copy, social links, Cal.com booking path, and similar settings live in **`data/site.ts`**. Project entries and case study fields are edited in **`data/projects.ts`**. New blog posts are added under **`content/blogs/`** as `.mdx` files with YAML frontmatter.
+
+---
+
+## Deployment
+
+Deploy to any platform that supports Next.js (e.g. [Vercel](https://vercel.com)). Set `NEXT_PUBLIC_SITE_URL` to your live domain in the hosting environment.
+
+---
+
+## License
+
+All rights reserved. This repository is private unless otherwise stated.

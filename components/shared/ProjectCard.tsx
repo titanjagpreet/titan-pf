@@ -26,7 +26,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={project.imageUrl}
-            alt={project.title}
+            alt={`Screenshot of ${project.title} project`}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (

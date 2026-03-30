@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { JsonLd } from "@/components/JsonLd";
 import { siteConfig } from "@/data/site";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -28,12 +29,17 @@ export const metadata: Metadata = {
   description: siteConfig.siteDescription,
   keywords: [
     "Jagpreet Singh",
+    "Jagpreet Singh developer",
     "Full Stack Developer",
-    "Next.js",
-    "React",
-    "TypeScript",
-    "Web3",
-    "Portfolio",
+    "React developer",
+    "Node.js developer",
+    "TypeScript developer",
+    "MongoDB",
+    "PostgreSQL",
+    "Web3 developer",
+    "backend developer",
+    "software engineer",
+    "jpsingh.dev",
   ],
   authors: [{ name: siteConfig.name, url: siteUrl }],
   creator: siteConfig.name,
@@ -44,12 +50,21 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `${siteConfig.name} - ${siteConfig.title}`,
     description: siteConfig.siteDescription,
+    images: [
+      {
+        url: "/assets/og-banner.png",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} - ${siteConfig.title}`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} - ${siteConfig.title}`,
     description: siteConfig.siteDescription,
     creator: "@titan47",
+    images: ["/assets/og-banner.png"],
   },
   robots: {
     index: true,
@@ -76,6 +91,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} relative min-h-screen overflow-x-hidden font-sans antialiased`}
       >

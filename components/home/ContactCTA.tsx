@@ -43,7 +43,7 @@ export function ContactCTA() {
               <span className="flex items-center gap-2 px-2 py-1 text-xs font-medium text-white sm:gap-2.5 sm:px-2.5 sm:py-1.5 sm:text-sm">
                 <Image
                   src={siteConfig.profileImageUrl}
-                  alt=""
+                  alt="Jagpreet Singh"
                   width={28}
                   height={28}
                   className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-white/10"

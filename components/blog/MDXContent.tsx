@@ -83,7 +83,7 @@ const components = {
     <div className="relative my-8 overflow-hidden rounded-xl border border-zinc-300/50 shadow-sm dark:border-white/10">
       <Image
         src={props.src}
-        alt={props.alt || ""}
+        alt={props.alt || "Blog post image"}
         width={1200}
         height={630}
         className="w-full object-cover"

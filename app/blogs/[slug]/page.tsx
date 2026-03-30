@@ -3,7 +3,9 @@ import { MDXContent } from "@/components/blog/MDXContent";
 import { ScrollProgress } from "@/components/blog/ScrollProgress";
 import { TableOfContents } from "@/components/blog/TableOfContents";
 import { BlogCard } from "@/components/blog/BlogCard";
+import { BreadcrumbJsonLd, ArticleJsonLd } from "@/components/JsonLd";
 import { SECTION_WIDTH } from "@/lib/constants";
+import { getSiteUrl } from "@/lib/site-url";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,17 +29,23 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   try {
     const resolvedParams = await params;
     const blog = getBlogBySlug(resolvedParams.slug);
+    const base = getSiteUrl().replace(/\/$/, "");
+    const url = `${base}/blogs/${blog.slug}`;
     const ogImages =
       blog.coverImage && blog.coverImage.trim() !== ""
         ? [{ url: blog.coverImage }]
         : undefined;
 
+    const ogDescription = `${blog.description} — by Jagpreet Singh.`;
     return {
       title: blog.title,
-      description: blog.description,
+      description: ogDescription,
+      authors: [{ name: "Jagpreet Singh", url: base }],
+      alternates: { canonical: url },
       openGraph: {
-        title: blog.title,
-        description: blog.description,
+        title: `${blog.title} — Jagpreet Singh`,
+        description: ogDescription,
+        url,
         type: "article",
         publishedTime: blog.date,
         authors: ["Jagpreet Singh"],
@@ -45,8 +53,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       },
       twitter: {
         card: ogImages ? "summary_large_image" : "summary",
-        title: blog.title,
-        description: blog.description,
+        title: `${blog.title} — Jagpreet Singh`,
+        description: ogDescription,
         ...(ogImages && { images: ogImages.map((i) => i.url) }),
       },
     };
@@ -73,8 +81,24 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     year: "numeric",
   });
 
+  const base = getSiteUrl().replace(/\/$/, "");
+
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Blog", href: "/blogs" },
+          { name: blog.title, href: `/blogs/${blog.slug}` },
+        ]}
+      />
+      <ArticleJsonLd
+        title={blog.title}
+        description={blog.description}
+        url={`${base}/blogs/${blog.slug}`}
+        datePublished={blog.date}
+        image={blog.coverImage}
+      />
       <ScrollProgress />
       <div className="pt-14 pb-10 sm:pt-20 sm:pb-14 md:pt-24 md:pb-16">
         <div className={SECTION_WIDTH}>
@@ -115,7 +139,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="blog-post-cover relative mb-8 w-full overflow-hidden rounded-2xl border border-zinc-300/50 shadow-sm dark:border-white/10 sm:mb-10 md:mb-12">
             <Image
               src={blog.coverImage}
-              alt={blog.title}
+              alt={`Cover image for ${blog.title}`}
               fill
               className="object-cover"
               priority

@@ -2,12 +2,16 @@ import { getAllBlogs } from "@/lib/mdx";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { SectionBadge } from "@/components/shared/SectionBadge";
 import { SECTION_WIDTH } from "@/lib/constants";
+import { getSiteUrl } from "@/lib/site-url";
 import { Metadata } from "next";
 
+const base = getSiteUrl().replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  title: "Blogs",
+  title: "Blog",
   description:
-    "Thoughts, tutorials, and notes on web development, Next.js, React, and building products.",
+    "Technical writing by Jagpreet Singh on React, Next.js, backend architecture, and lessons from building real-world applications.",
+  alternates: { canonical: `${base}/blogs` },
 };
 
 export default function BlogsPage() {

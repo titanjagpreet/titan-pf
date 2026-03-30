@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { projects } from "@/data/projects";
 import { ProjectCaseStudyView } from "@/components/projects/ProjectCaseStudyView";
+import { BreadcrumbJsonLd } from "@/components/JsonLd";
 import { getSiteUrl } from "@/lib/site-url";
 
 interface ProjectPageProps {
@@ -20,19 +21,22 @@ export async function generateMetadata({
   if (!project) return { title: "Not found" };
   const base = getSiteUrl().replace(/\/$/, "");
   const url = `${base}/projects/${project.slug}`;
+  const ogDescription = `${project.description} — a project by Jagpreet Singh.`;
   return {
     title: project.title,
-    description: project.description,
+    description: ogDescription,
+    alternates: { canonical: url },
     openGraph: {
-      title: project.title,
-      description: project.description,
+      title: `${project.title} — Jagpreet Singh`,
+      description: ogDescription,
       url,
       type: "article",
+      authors: ["Jagpreet Singh"],
     },
     twitter: {
       card: "summary_large_image",
-      title: project.title,
-      description: project.description,
+      title: `${project.title} — Jagpreet Singh`,
+      description: ogDescription,
     },
   };
 }
@@ -48,10 +52,19 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const relatedProjects = projects.filter((p) => p.slug !== slug).slice(0, 2);
 
   return (
-    <ProjectCaseStudyView
-      project={project}
-      nextProject={nextProject}
-      relatedProjects={relatedProjects}
-    />
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Projects", href: "/projects" },
+          { name: project.title, href: `/projects/${project.slug}` },
+        ]}
+      />
+      <ProjectCaseStudyView
+        project={project}
+        nextProject={nextProject}
+        relatedProjects={relatedProjects}
+      />
+    </>
   );
 }

@@ -11,7 +11,7 @@ export const siteConfig = {
   title: "Full Stack Developer",
   /** Used in meta tags and SEO (longer than the hero tagline). */
   siteDescription:
-    "Full stack developer portfolio: projects, case studies, blog, and resume. Built with Next.js, TypeScript, and Tailwind CSS.",
+    "Jagpreet Singh is a Full Stack Developer who builds scalable web applications with React, Node.js, TypeScript, and cloud infrastructure. Browse projects, read case studies, and get in touch.",
   email: "titanjagpreetsingh@gmail.com",
   footer: "Built with ❤️ by titan © 2026. All rights reserved.",
   /** Public URL to PDF (file must live under public/, e.g. public/assets/resume.pdf) */
