@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flushSync } from "react-dom";
@@ -9,14 +9,28 @@ import { flushSync } from "react-dom";
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Preload the sound
+    audioRef.current = new Audio("/assets/sounds/switch-on.mp3");
+    audioRef.current.volume = 0.5; // Soft volume
   }, []);
 
   if (!mounted) return null;
 
+  const playSound = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {
+        // Ignore auto-play restrictions if user hasn't interacted with document yet
+      });
+    }
+  };
+
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    playSound();
     const isDark = theme === "dark";
     const nextTheme = isDark ? "light" : "dark";
 
