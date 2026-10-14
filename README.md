@@ -19,11 +19,13 @@ The UI is optimized for clarity and performance: server components by default, c
 
 ## Features
 
-- **Home** – Hero, featured projects, about, recent posts, GitHub activity, call-to-action
+- **Home** – Hero (with availability + local time), featured projects, about, recent posts, GitHub activity heatmap, call-to-action
 - **Projects** – Listing and per-project case study pages (overview, technical breakdown, challenges, learnings)
 - **Blog** – MDX with frontmatter, reading time, and related posts
 - **Resume & experience** – Dedicated pages for CV download and timeline content
-- **Contact** – Contact page plus Cal.com “Book a call” integration (configurable)
+- **Contact** – Working contact form (Resend, with a prefilled mailto fallback), Cal.com “Book a call” (loaded on demand), copy-email button
+- **Interaction** – ⌘K / Ctrl+K command menu, project card → case study image morph (View Transitions), cursor spotlight on cards, circular theme reveal with switch sounds (mutable from the footer or ⌘K), scrollspy tables of contents
+- **Motion** – CSS entrances so content is visible before JavaScript loads, shared easing tokens, and full `prefers-reduced-motion` support
 - **SEO** – Metadata, Open Graph, `sitemap.xml`, `robots.txt`, canonical URL support
 
 ---
@@ -66,8 +68,13 @@ Open [http://localhost:3000](http://localhost:3000).
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Public site origin (e.g. `https://example.com`). Used for canonical URLs, sitemap, and Open Graph when deployed. |
+| `GITHUB_TOKEN` | Personal access token (`read:user`) for the GitHub activity heatmap. Fetched on the server and revalidated hourly; without it the section is hidden. |
+| `NEXT_PUBLIC_USE_MOCK_GITHUB` | Set to `true` to preview the heatmap with random data (overrides the token). |
+| `RESEND_API_KEY` | [Resend](https://resend.com) API key for the contact form. Without it, the form offers a prefilled mailto link instead. |
+| `CONTACT_TO_EMAIL` | Optional. Where contact messages go (defaults to `email` in `data/site.ts`). |
+| `CONTACT_FROM_EMAIL` | Optional. Sender address, e.g. `Portfolio <hello@yourdomain.com>` (must be a domain verified in Resend; defaults to Resend's test sender). |
 
-Site copy, social links, Cal.com booking path, and similar settings live in **`data/site.ts`**. Project entries and case study fields are edited in **`data/projects.ts`**. New blog posts are added under **`content/blogs/`** as `.mdx` files with YAML frontmatter.
+Site copy, social links, availability pill, time zone, Cal.com booking path, and similar settings live in **`data/site.ts`**. Project entries and case study fields (summary, kind, highlights, screenshot import) are edited in **`data/projects.ts`**. New blog posts are added under **`content/blogs/`** as `.mdx` files with YAML frontmatter.
 
 ---
 

@@ -4,7 +4,12 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/JsonLd";
+import { MotionProvider } from "@/components/MotionProvider";
+import { CommandPalette } from "@/components/CommandPalette";
+import { Toaster } from "@/components/Toaster";
 import { siteConfig } from "@/data/site";
+import { projects } from "@/data/projects";
+import { getAllBlogs } from "@/lib/mdx";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -53,8 +58,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/assets/og-banner.png",
-        width: 1200,
-        height: 630,
+        width: 1376,
+        height: 768,
         alt: `${siteConfig.name} - ${siteConfig.title}`,
       },
     ],
@@ -89,6 +94,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Only titles and links go to the client for the ⌘K menu.
+  const paletteProjects = projects.map((p) => ({
+    title: p.title,
+    href: `/projects/${p.slug}`,
+    hint: p.kind,
+  }));
+  const palettePosts = getAllBlogs().map((b) => ({ title: b.title, href: `/blogs/${b.slug}` }));
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -102,17 +115,21 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem
         >
-          <a
-            href="#main-content"
-            className="absolute left-[-9999px] top-4 z-[100] rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white outline-none ring-2 ring-zinc-400 transition-none focus:left-4 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            Skip to main content
-          </a>
-          <Header />
-          <main id="main-content" className="relative z-10">
-            {children}
-          </main>
-          <Footer />
+          <MotionProvider>
+            <a
+              href="#main-content"
+              className="absolute left-[-9999px] top-4 z-[100] rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white outline-none ring-2 ring-zinc-400 transition-none focus:left-4 dark:bg-zinc-100 dark:text-zinc-900"
+            >
+              Skip to main content
+            </a>
+            <Header />
+            <main id="main-content" className="relative z-10">
+              {children}
+            </main>
+            <Footer />
+            <CommandPalette projects={paletteProjects} posts={palettePosts} />
+            <Toaster />
+          </MotionProvider>
         </ThemeProvider>
       </body>
     </html>

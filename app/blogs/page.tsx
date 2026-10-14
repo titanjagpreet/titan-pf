@@ -1,6 +1,6 @@
 import { getAllBlogs } from "@/lib/mdx";
 import { BlogCard } from "@/components/blog/BlogCard";
-import { SectionBadge } from "@/components/shared/SectionBadge";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { SECTION_WIDTH } from "@/lib/constants";
 import { getSiteUrl } from "@/lib/site-url";
 import { Metadata } from "next";
@@ -18,28 +18,29 @@ export default function BlogsPage() {
   const blogs = getAllBlogs();
 
   return (
-    <div className="pt-14 pb-10 sm:pt-20 sm:pb-14 md:pt-24 md:pb-16">
+    <div className="pt-24 pb-12 sm:pt-28 sm:pb-16 md:pt-32 md:pb-20">
       <div className={SECTION_WIDTH}>
-        <div className="mb-8 sm:mb-12">
-          <SectionBadge className="mb-3">Writing</SectionBadge>
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl md:text-3xl">
-            Blogs
-          </h1>
-          <p className="mt-4 max-w-2xl text-base text-zinc-700 dark:text-zinc-400">
-            Thoughts, tutorials, and notes on web development and tech.
-            {blogs.length > 0 && (
-              <span className="mt-2 block text-sm text-zinc-500 dark:text-zinc-500">
-                {blogs.length} {blogs.length === 1 ? "post" : "posts"} published
-              </span>
-            )}
-          </p>
-          <div className="mt-4 h-px w-16 bg-gradient-to-r from-zinc-400 to-transparent dark:from-zinc-600" />
-        </div>
+        <PageHeader
+          badge="Writing"
+          title="Blogs"
+          description={
+            <>
+              Thoughts, tutorials, and notes on web development and tech.
+              {blogs.length > 0 && (
+                <span className="mt-2 block font-mono text-xs text-zinc-500 dark:text-zinc-500">
+                  {blogs.length} {blogs.length === 1 ? "post" : "posts"} published
+                </span>
+              )}
+            </>
+          }
+        />
 
         {blogs.length > 0 ? (
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
-            {blogs.map((blog) => (
-              <BlogCard key={blog.slug} blog={blog} />
+            {blogs.map((blog, i) => (
+              <div key={blog.slug} className="enter" style={{ "--i": 3 + i } as React.CSSProperties}>
+                <BlogCard blog={blog} />
+              </div>
             ))}
           </div>
         ) : (

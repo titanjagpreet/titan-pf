@@ -1,81 +1,43 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState, useRef } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { flushSync } from "react-dom";
+import { preloadSound, SOUNDS } from "@/lib/sound";
+import { switchTheme } from "@/lib/theme-switch";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    // Preload the sound
-    audioRef.current = new Audio("/assets/sounds/switch-on.mp3");
-    audioRef.current.volume = 0.5; // Soft volume
-  }, []);
-
-  if (!mounted) return null;
-
-  const playSound = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {
-        // Ignore auto-play restrictions if user hasn't interacted with document yet
-      });
-    }
-  };
-
-  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    playSound();
-    const isDark = theme === "dark";
-    const nextTheme = isDark ? "light" : "dark";
-
-    // Fallback for browsers that don't support View Transitions API
-    if (!document.startViewTransition) {
-      setTheme(nextTheme);
-      return;
-    }
-
-    // Get click coordinates for the circle animation
-    const x = e.clientX;
-    const y = e.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y)
-    );
-
-    // Pass coordinates to CSS
-    document.documentElement.style.setProperty("--x", `${x}px`);
-    document.documentElement.style.setProperty("--y", `${y}px`);
-    document.documentElement.style.setProperty("--r", `${endRadius}px`);
-
-    document.startViewTransition(() => {
-      flushSync(() => {
-        setTheme(nextTheme);
-      });
-    });
-  };
+  const { setTheme } = useTheme();
 
   return (
     <button
-      onClick={toggleTheme}
+      type="button"
+      onClick={(e) => {
+        // Keyboard activation reports 0,0; reveal from the button's center instead.
+        const rect = e.currentTarget.getBoundingClientRect();
+        const fromPointer = e.clientX !== 0 || e.clientY !== 0;
+        switchTheme(setTheme, {
+          x: fromPointer ? e.clientX : rect.left + rect.width / 2,
+          y: fromPointer ? e.clientY : rect.top + rect.height / 2,
+        });
+      }}
+      onPointerEnter={() => {
+        preloadSound(SOUNDS.switchOn);
+        preloadSound(SOUNDS.switchOff);
+      }}
       className={cn(
-        "rounded-full p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center sm:min-h-0 sm:min-w-0 sm:p-1.5",
+        "relative flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full p-2 sm:min-h-[32px] sm:min-w-[32px] sm:p-1.5",
         "border border-zinc-300 dark:border-white/[0.08]",
-        "bg-transparent hover:bg-zinc-200 dark:hover:bg-white/10",
+        "bg-transparent text-zinc-600 transition-[background-color,transform] duration-150 ease-snappy hover:bg-zinc-200 active:scale-[0.94] dark:text-zinc-400 dark:hover:bg-white/10",
         className
       )}
       aria-label="Toggle theme"
+      title="Toggle theme"
     >
-      {theme === "dark" ? (
-        <Sun className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-      ) : (
-        <Moon className="h-5 w-5 text-zinc-600 dark:text-zinc-500" />
-      )}
+      {/* Both icons are always rendered; the .dark class (set before paint) decides which shows,
+          so the button never pops in after hydration. */}
+      <Sun className="absolute h-[18px] w-[18px] rotate-90 scale-0 opacity-0 transition-[transform,opacity] duration-300 ease-snappy dark:rotate-0 dark:scale-100 dark:opacity-100" />
+      <Moon className="h-[18px] w-[18px] rotate-0 scale-100 opacity-100 transition-[transform,opacity] duration-300 ease-snappy dark:-rotate-90 dark:scale-0 dark:opacity-0" />
     </button>
   );
 }

@@ -1,7 +1,15 @@
 /**
- * Portfolio projects. Edit entries here. Add imageUrl when you have a cover or screenshot in public/assets/.
- * Omit projectUrl if not deployed. Omit githubUrl if the repo is private (hides the GitHub button). Use nextProjectSlug when you have multiple projects.
+ * Portfolio projects. Edit entries here. Import a cover/screenshot from public/assets/ as `image`
+ * (static imports give next/image the dimensions and a blur placeholder).
+ * Omit projectUrl if not deployed (hides the "Live" badge). Omit githubUrl if the repo is private
+ * (hides the GitHub button and "Open source" badge). Use nextProjectSlug when you have multiple projects.
  */
+
+import type { StaticImageData } from "next/image";
+import lighterPulseImage from "@/public/assets/lp-hero.png";
+import liquidationsImage from "@/public/assets/liquidations.png";
+import walletxImage from "@/public/assets/walletx-hero.png";
+import liveCursorsImage from "@/public/assets/live-cursors.png";
 
 export interface TechnicalSection {
   heading: string;
@@ -9,11 +17,21 @@ export interface TechnicalSection {
   body: string;
 }
 
+export interface ProjectHighlight {
+  value: string;
+  label: string;
+}
+
 export interface Project {
   slug: string;
   title: string;
+  /** Short (~2 line) pitch for cards and the command palette. */
+  summary: string;
   description: string;
-  status?: string;
+  /** What kind of project this is, e.g. "Product", "Backend service". */
+  kind: string;
+  /** 2-3 headline facts shown at the top of the case study. */
+  highlights?: ProjectHighlight[];
   techStack?: string[];
   challenges?: string[];
   learnings?: string[];
@@ -23,12 +41,12 @@ export interface Project {
   content?: string;
   featured?: boolean;
   nextProjectSlug?: string;
-  imageUrl?: string;
+  image?: StaticImageData;
   projectUrl?: string;
   githubUrl?: string;
   whatItDoes?: string[];
   examples?: { shortcut: string; value: string }[];
-  technicalBreakdown?: { extension: string; backend: string };
+  technicalBreakdown?: { title: string; body: string }[];
   challengesDetail?: { title: string; content: string }[];
   whoItsFor?: string;
 }
@@ -36,11 +54,18 @@ export interface Project {
 export const projects: Project[] = [
   {
     slug: "lighterpulse",
-    imageUrl: "/assets/lp-hero.png",
+    image: lighterPulseImage,
     title: "LighterPulse",
+    summary:
+      "Analytics hub for Lighter.xyz: dashboards, a block explorer, exchange stats and cross-venue funding comparison.",
+    kind: "Product",
+    highlights: [
+      { value: "4", label: "venues in funding comparison" },
+      { value: "~1h", label: "Redis TTL on KPI aggregates" },
+      { value: "<2s", label: "perceived load on a warm cache" },
+    ],
     description:
       "Analytics and exploration platform for the Lighter.xyz ecosystem, covering dashboards, a block explorer, exchange statistics, multi-venue funding comparison, and protocol announcements. Redis-backed caching and a split between live and cached data paths keep the UI responsive.",
-    status: "All Systems Operational",
     featured: true,
     projectUrl: "https://lighterpulse.xyz",
     /* Private repo: omit githubUrl */
@@ -95,11 +120,18 @@ export const projects: Project[] = [
   },
   {
     slug: "lighter-liquidations",
-    imageUrl: "/assets/liquidations.png",
+    image: liquidationsImage,
     title: "Lighter Liquidations",
+    summary:
+      "Streaming pipeline that ingests Lighter liquidations, dedupes replayed batches and serves a rolling 24h total.",
+    kind: "Backend service",
+    highlights: [
+      { value: "1 min", label: "time-series bucket size" },
+      { value: "24h", label: "rolling liquidation window" },
+      { value: "2", label: "isolated processes: worker + API" },
+    ],
     description:
       "Backend service for Lighter.xyz that ingests perpetuals liquidation events over WebSockets, deduplicates noisy replay batches, aggregates notional USD into per-minute buckets in Upstash Redis, and serves a rolling 24 hour liquidation total over HTTP.",
-    status: "All Systems Operational",
     featured: true,
     githubUrl: "https://github.com/titanjagpreet/lighter-liquidations",
     nextProjectSlug: "walletx",
@@ -119,12 +151,16 @@ export const projects: Project[] = [
       "Maintains a rolling 24-hour liquidation total using Redis TTL",
       "Exposes a lightweight HTTP API for dashboards and integrations",
     ],
-    technicalBreakdown: {
-      extension:
-        "The system is split into two independent processes: a long-running worker and a stateless HTTP server. The worker maintains WebSocket connections, processes incoming liquidation events, and updates Redis in real time. The API server reads aggregated data from Redis and exposes it via REST endpoints.",
-      backend:
-        "WebSocket ingestion is handled using Node.js with persistent connections and reconnection logic. Redis (Upstash REST) is used as a time-series store where each minute acts as a bucket. Deduplication logic ensures idempotent aggregation by filtering repeated events within batch windows. The rolling 24-hour metric is computed dynamically by summing active buckets.",
-    },
+    technicalBreakdown: [
+      {
+        title: "System architecture",
+        body: "The system is split into two independent processes: a long-running worker and a stateless HTTP server. The worker maintains WebSocket connections, processes incoming liquidation events, and updates Redis in real time. The API server reads aggregated data from Redis and exposes it via REST endpoints.",
+      },
+      {
+        title: "Ingestion and data layer",
+        body: "WebSocket ingestion is handled using Node.js with persistent connections and reconnection logic. Redis (Upstash REST) is used as a time-series store where each minute acts as a bucket. Deduplication logic ensures idempotent aggregation by filtering repeated events within batch windows. The rolling 24-hour metric is computed dynamically by summing active buckets.",
+      },
+    ],
     challengesDetail: [
       {
         title: "Deduplication of noisy WebSocket streams",
@@ -168,11 +204,18 @@ export const projects: Project[] = [
   },
   {
     slug: "walletx",
-    imageUrl: "/assets/walletx-hero.png",
+    image: walletxImage,
     title: "WalletX",
+    summary:
+      "FinTech-style wallet demo where every P2P transfer is atomic, backed by MongoDB multi-document transactions.",
+    kind: "Full-stack demo",
+    highlights: [
+      { value: "ACID", label: "multi-document transfers" },
+      { value: "JWT + Zod", label: "auth and input validation" },
+      { value: "Rollback", label: "on any failure before commit" },
+    ],
     description:
       "Full-stack FinTech-style wallet demo: P2P transfers, balances, history, and dashboard analytics. MongoDB multi-document transactions enforce ACID semantics so debits and credits stay consistent under concurrency (simulated funds, not real money).",
-    status: "All Systems Operational",
     featured: true,
     projectUrl: "https://walletx-coral.vercel.app/",
     githubUrl: "https://github.com/titanjagpreet/walletx",
@@ -201,12 +244,16 @@ export const projects: Project[] = [
       "Provides real-time dashboard with balance and analytics",
       "Implements secure authentication and user management",
     ],
-    technicalBreakdown: {
-      extension:
-        "Frontend is built with React + Vite using TypeScript, with TanStack Query for server state management and Recharts for analytics. The UI is component-driven with Tailwind and Radix, focusing on responsive and accessible FinTech-style design.",
-      backend:
-        "Backend follows an MVC architecture using Express and Mongoose. Core business logic is implemented in a transfer service that uses MongoDB sessions and multi-document transactions to ensure ACID compliance. JWT handles authentication, while Zod validates all inputs before execution.",
-    },
+    technicalBreakdown: [
+      {
+        title: "Frontend",
+        body: "Frontend is built with React + Vite using TypeScript, with TanStack Query for server state management and Recharts for analytics. The UI is component-driven with Tailwind and Radix, focusing on responsive and accessible FinTech-style design.",
+      },
+      {
+        title: "Backend",
+        body: "Backend follows an MVC architecture using Express and Mongoose. Core business logic is implemented in a transfer service that uses MongoDB sessions and multi-document transactions to ensure ACID compliance. JWT handles authentication, while Zod validates all inputs before execution.",
+      },
+    ],
     challengesDetail: [
       {
         title: "Ensuring atomic money transfers",
@@ -250,11 +297,18 @@ export const projects: Project[] = [
   },
   {
     slug: "live-cursors",
-    imageUrl: "/assets/live-cursors.png",
+    image: liveCursorsImage,
     title: "Live Cursors",
+    summary:
+      "Multiplayer cursors over WebSockets, with throttled pointer streams and Bézier-smoothed rendering.",
+    kind: "Real-time demo",
+    highlights: [
+      { value: "~50ms", label: "pointer update throttle" },
+      { value: "Bézier", label: "interpolated cursor motion" },
+      { value: "O(n)", label: "broadcast fan-out per update" },
+    ],
     description:
       "Real-time collaborative cursors over WebSockets: throttled pointer streams, broadcast fan-out, and Bézier-smoothed rendering with perfect-cursors and GPU-friendly SVG transforms.",
-    status: "All Systems Operational",
     featured: true,
     githubUrl: "https://github.com/titanjagpreet/live-cursors",
     /* Add projectUrl when the client is deployed publicly */
@@ -277,12 +331,16 @@ export const projects: Project[] = [
       "Renders smooth cursor motion using interpolation (perfect-cursors)",
       "Maintains unique user sessions using UUID-based identification",
     ],
-    technicalBreakdown: {
-      extension:
-        "Frontend is built with React + Vite using TypeScript. WebSocket communication is handled via react-use-websocket, while cursor rendering uses perfect-cursors for Bézier interpolation. SVG + CSS transforms are used for GPU-accelerated rendering and smooth animations.",
-      backend:
-        "Backend is a stateful WebSocket server built with Node.js and ws. Each client connects with a username, receives a UUID, and sends throttled cursor updates. The server maintains in-memory state and broadcasts updates to all connected clients in real time.",
-    },
+    technicalBreakdown: [
+      {
+        title: "Frontend",
+        body: "Frontend is built with React + Vite using TypeScript. WebSocket communication is handled via react-use-websocket, while cursor rendering uses perfect-cursors for Bézier interpolation. SVG + CSS transforms are used for GPU-accelerated rendering and smooth animations.",
+      },
+      {
+        title: "Backend",
+        body: "Backend is a stateful WebSocket server built with Node.js and ws. Each client connects with a username, receives a UUID, and sends throttled cursor updates. The server maintains in-memory state and broadcasts updates to all connected clients in real time.",
+      },
+    ],
     challengesDetail: [
       {
         title: "Handling high-frequency cursor events",
