@@ -1,4 +1,12 @@
-export const techStack = [
+export interface TechItem {
+  name: string;
+  url: string;
+  icon: string;
+  /** Brand color the icon blooms into on hover. Omit for black/white logos (they use the text color). */
+  color?: string;
+}
+
+export const techStack: TechItem[] = [
   // Languages
   { name: "C++", url: "https://isocpp.org/", icon: "SiCplusplus", color: "#00599C" },
   { name: "JavaScript", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript", icon: "SiJavascript", color: "#F7DF1E" },
@@ -6,11 +14,11 @@ export const techStack = [
   { name: "TypeScript", url: "https://www.typescriptlang.org/", icon: "SiTypescript", color: "#3178C6" },
   // Core tech & frameworks
   { name: "React.js", url: "https://react.dev/", icon: "SiReact", color: "#61DAFB" },
-  { name: "Next.js", url: "https://nextjs.org/", icon: "SiNextdotjs", color: "#ffffff" },
-  { name: "Express.js", url: "https://expressjs.com/", icon: "SiExpress", color: "#000000" },
+  { name: "Next.js", url: "https://nextjs.org/", icon: "SiNextdotjs" },
+  { name: "Express.js", url: "https://expressjs.com/", icon: "SiExpress" },
   { name: "Node.js", url: "https://nodejs.org/", icon: "SiNodedotjs", color: "#339933" },
   { name: "Tailwind CSS", url: "https://tailwindcss.com/", icon: "SiTailwindcss", color: "#06B6D4" },
-  { name: "Prisma", url: "https://www.prisma.io/", icon: "SiPrisma", color: "#2D3748" },
+  { name: "Prisma", url: "https://www.prisma.io/", icon: "SiPrisma" },
   { name: "MongoDB", url: "https://www.mongodb.com/", icon: "SiMongodb", color: "#47A248" },
   { name: "PostgreSQL", url: "https://www.postgresql.org/", icon: "SiPostgresql", color: "#4169E1" },
   { name: "Redis", url: "https://redis.io/", icon: "SiRedis", color: "#DC382D" },
@@ -21,4 +29,4 @@ export const techStack = [
   { name: "Git", url: "https://git-scm.com/", icon: "SiGit", color: "#F05032" },
   { name: "Postman", url: "https://www.postman.com/", icon: "SiPostman", color: "#FF6C37" },
   { name: "WebSocket", url: "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API", icon: "SiSocketdotio", color: "#A78BFA" },
-] as const;
+];

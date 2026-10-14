@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Enables React <ViewTransition> for route navigations (project card -> case study morph).
+    viewTransition: true,
+  },
 };
 
 export default nextConfig;

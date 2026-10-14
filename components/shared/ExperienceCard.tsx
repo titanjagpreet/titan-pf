@@ -15,7 +15,7 @@ export function ExperienceCard({ experience, index = 0 }: ExperienceCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
-      className="rounded-xl border border-zinc-300 dark:border-zinc-700/50 bg-white dark:bg-zinc-900/50 p-4 transition-all hover:-translate-y-1 hover:shadow-lg sm:p-6"
+      className="rounded-xl border border-zinc-300 dark:border-zinc-700/50 bg-white dark:bg-zinc-900/50 p-4 transition-shadow duration-300 hover:shadow-lg sm:p-6"
     >
       <div className="space-y-4">
         <div>

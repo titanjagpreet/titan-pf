@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import readingTime from "reading-time";
+import GithubSlugger from "github-slugger";
 
 const root = process.cwd();
 const blogsDirectory = path.join(root, "content", "blogs");
@@ -59,4 +60,37 @@ export function getRelatedBlogs(currentSlug: string, tags: string[]): BlogPost[]
     .filter((blog) => blog.slug !== currentSlug)
     .filter((blog) => blog.tags.some((tag) => tags.includes(tag)))
     .slice(0, 3);
+}
+
+export interface BlogHeading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+/**
+ * h2/h3 headings for the table of contents, with the same ids rehype-slug generates
+ * (github-slugger over the heading's plain text). Fenced code blocks are skipped.
+ */
+export function getBlogHeadings(content: string): BlogHeading[] {
+  const slugger = new GithubSlugger();
+  const headings: BlogHeading[] = [];
+  let inFence = false;
+
+  for (const line of content.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const match = /^(#{2,3})\s+(.+?)\s*#*\s*$/.exec(line);
+    if (!match) continue;
+    const text = match[2]
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[`*_~]/g, "")
+      .trim();
+    headings.push({ id: slugger.slug(text), text, level: match[1].length });
+  }
+
+  return headings;
 }

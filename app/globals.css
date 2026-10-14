@@ -6,15 +6,18 @@
 :root {
   --background: #FBF8E9;
   --foreground: #171717;
+  /* Single accent used sparingly: status dots, focus rings, progress, heatmap */
+  --accent: #059669;
+  --accent-soft: rgb(5 150 105 / 0.14);
   /* Blog: surfaces aligned with site cream / tech-badge palette */
   --blog-surface: #F2EFE5;
   --blog-surface-border: rgba(0, 0, 0, 0.08);
-  
+
   /* IDE Code Block Colors (GitHub Light) */
   --blog-code-bg: #f6f8fa;
   --blog-code-border: #d0d7de;
   --blog-code-text: #24292f;
-  
+
   --blog-inline-code-bg: #EAE6D8;
   --blog-inline-code-text: #171717;
 }
@@ -22,21 +25,31 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Motion tokens: one ease-out curve for UI, one in-out for on-screen movement */
+@theme {
+  --ease-snappy: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-swift: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .dark {
   --background: #151515;
   --foreground: #ededed;
+  --accent: #34d399;
+  --accent-soft: rgb(52 211 153 / 0.14);
   --blog-surface: #1E1E1E;
   --blog-surface-border: rgba(255, 255, 255, 0.08);
-  
+
   /* IDE Code Block Colors (GitHub Dark) */
   --blog-code-bg: #0d1117;
   --blog-code-border: #30363d;
   --blog-code-text: #c9d1d9;
-  
+
   --blog-inline-code-bg: #2A2A2A;
   --blog-inline-code-text: #ededed;
 }
@@ -53,14 +66,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Keyboard focus: visible ring without changing mouse click outline */
-:focus-visible {
-  outline: 2px solid rgb(113 113 122);
-  outline-offset: 2px;
+::selection {
+  background: var(--accent-soft);
 }
 
-.dark :focus-visible {
-  outline-color: rgb(161 161 170);
+/* Keyboard focus: visible ring without changing mouse click outline */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Visible noise texture overlay - matches original */
@@ -78,33 +91,165 @@ html.dark body::before {
   opacity: 0.05;
 }
 
-/* View Transitions API for Theme Toggle */
-::view-transition-group(root) {
-  animation-duration: 1s;
-  animation-timing-function: ease-in-out;
+/* ---------------------------------------------------------------------------
+   Entrance animations (CSS, so content is visible before JS hydrates)
+   Use `enter` on an element and set --i for its position in the stagger.
+--------------------------------------------------------------------------- */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
 }
 
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.enter {
+  animation: enter 600ms var(--ease-snappy) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 60ms);
+}
+
+/* Hero name: word-by-word blur reveal */
+.enter-word {
+  display: inline-block;
+  animation: enter 700ms var(--ease-snappy) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 120ms);
+}
+
+/* ---------------------------------------------------------------------------
+   Cursor spotlight for cards (pointer devices only).
+   The element sets --mx/--my from pointer position; see lib/spotlight.ts.
+--------------------------------------------------------------------------- */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.spotlight::before,
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-snappy);
+}
+
+/* Soft fill that follows the cursor (behind the card's content) */
+.spotlight::before {
+  z-index: -1;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(0 0 0 / 0.035),
+    transparent 45%
+  );
+}
+
+/* Border glow that follows the cursor */
+.spotlight::after {
+  z-index: 2;
+  padding: 1px;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(0 0 0 / 0.28),
+    transparent 60%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.dark .spotlight::before {
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.05),
+    transparent 45%
+  );
+}
+
+.dark .spotlight::after {
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.32),
+    transparent 60%
+  );
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .spotlight:hover::before,
+  .spotlight:hover::after {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   GitHub heatmap: diagonal wave the first time the graph scrolls into view.
+   The graph is fully visible by default; JS arms it only when it starts
+   below the fold, so no-JS and reduced-motion visitors see it immediately.
+--------------------------------------------------------------------------- */
+@keyframes heat-cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+[data-phase="armed"] .heat-cell {
+  opacity: 0;
+}
+
+[data-phase="shown"] .heat-cell {
+  animation: heat-cell-in 420ms var(--ease-snappy) both;
+  animation-delay: calc(var(--d, 0) * 9ms);
+}
+
+/* ---------------------------------------------------------------------------
+   View Transitions
+   - Route navigations: quick root cross-fade + shared-element morphs
+     (project card image/title -> case study hero), driven by <ViewTransition>.
+   - Theme toggle: circular reveal, scoped to html.theme-transition so it
+     never leaks into route navigations.
+--------------------------------------------------------------------------- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-snappy);
+}
+
+::view-transition-group(.morph) {
+  animation-duration: 450ms;
+  animation-timing-function: var(--ease-snappy);
+}
+
+html.theme-transition::view-transition-old(root),
+html.theme-transition::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
 /* Switching to Dark (html has .dark) */
-.dark::view-transition-old(root) {
+html.theme-transition.dark::view-transition-old(root) {
   z-index: 1; /* Old light theme static on bottom */
 }
-.dark::view-transition-new(root) {
+html.theme-transition.dark::view-transition-new(root) {
   z-index: 2; /* New dark theme expands on top */
-  animation: theme-clip-in 0.6s ease-in-out forwards;
+  animation: theme-clip-in 550ms var(--ease-swift) forwards;
 }
 
 /* Switching to Light (html does not have .dark) */
-:root:not(.dark)::view-transition-old(root) {
+html.theme-transition:not(.dark)::view-transition-old(root) {
   z-index: 2; /* Old dark theme shrinks on top */
-  animation: theme-clip-out 0.6s ease-in-out forwards;
+  animation: theme-clip-out 550ms var(--ease-swift) forwards;
 }
-:root:not(.dark)::view-transition-new(root) {
+html.theme-transition:not(.dark)::view-transition-new(root) {
   z-index: 1; /* New light theme static on bottom */
 }
 
@@ -123,6 +268,67 @@ html.dark body::before {
   }
   to {
     clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Command palette (cmdk / Radix dialog data-state)
+--------------------------------------------------------------------------- */
+@keyframes palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
+@keyframes palette-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.cmdk-overlay[data-state="open"] {
+  animation: enter-fade 160ms var(--ease-snappy);
+}
+.cmdk-overlay[data-state="closed"] {
+  animation: fade-out 120ms var(--ease-snappy);
+}
+.cmdk-content[data-state="open"] {
+  animation: palette-in 200ms var(--ease-snappy);
+}
+.cmdk-content[data-state="closed"] {
+  animation: palette-out 120ms var(--ease-snappy);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion: keep fades, drop movement, blur and morphs.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .enter,
+  .enter-word {
+    animation-name: enter-fade;
+    animation-duration: 300ms;
+  }
+
+  [data-phase="shown"] .heat-cell {
+    animation: none;
+  }
+
+  .cmdk-content[data-state="open"] {
+    animation-name: enter-fade;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
@@ -185,6 +391,12 @@ html.dark body::before {
 .blog-post-article.prose pre {
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* Typography adds its own quote marks; the MDX already contains them */
+.blog-post-article.prose blockquote p:first-of-type::before,
+.blog-post-article.prose blockquote p:last-of-type::after {
+  content: none;
 }
 
 /* Shiki line spans: allow long lines to wrap instead of horizontal scroll */
