@@ -49,6 +49,10 @@ export interface Project {
   githubUrl?: string;
   whatItDoes?: string[];
   examples?: { shortcut: string; value: string }[];
+  /** Optional section titles for the case study (defaults: "What it does", "Technical challenges", "Learnings"). */
+  headings?: { whatItDoes?: string; challenges?: string; learnings?: string };
+  /** Planned improvements, shown as a "Next steps" section. */
+  nextSteps?: string[];
   technicalBreakdown?: { title: string; body: string }[];
   challengesDetail?: { title: string; content: string }[];
   whoItsFor?: string;
@@ -223,7 +227,7 @@ export const projects: Project[] = [
     nextProjectSlug: "walletx",
     techStack: ["Node.js", "WebSockets (ws)", "Upstash Redis", "Express", "REST API"],
     overview:
-      "Lighter OI Aggregator answers a question every Lighter dashboard needs: how much open interest is there across the whole exchange right now? Lighter publishes per-market statistics over a WebSocket channel but no single exchange-wide total, and keeping a socket open in every client just to add numbers up is wasteful.\n\nThe service splits the problem into two small processes. A worker connects on a schedule, reads one complete snapshot of every market, computes the total and disconnects. A stateless HTTP API reads the stored figure from Redis, so clients get the number with one request and no streaming code.",
+      "Lighter OI Aggregator answers a question every Lighter dashboard needs: how much open interest is there across the whole exchange right now? Lighter's market-stats stream reports open interest market by market, so an exchange-wide figure means summing every market, and keeping a socket open in every client just to add those numbers up is wasteful.\n\nThe service splits the problem into two small processes. A worker connects on a schedule, reads one complete snapshot of every market, computes the total and disconnects. A stateless HTTP API reads the stored figure from Redis, so clients get the number with one request and no streaming code.",
     whatItDoes: [
       "Subscribes to Lighter's market_stats/all channel and reads the initial snapshot of every market",
       "Sums open interest across all markets and doubles it, matching the two-sided total Lighter's own interface shows",
@@ -369,19 +373,24 @@ export const projects: Project[] = [
   {
     slug: "dockerized-turborepo-pipeline",
     image: turborepoPipelineImage,
-    title: "Dockerized Turborepo CI/CD",
+    title: "Dockerized Turborepo Pipeline",
     summary:
-      "Three services, one monorepo: path-filtered GitHub Actions build SHA-tagged images and deploy each service to a VM behind Nginx and TLS.",
-    kind: "DevOps / infrastructure",
+      "A learning project for CI/CD and Docker: containerised services shipped by GitHub Actions to a Linux VM behind Nginx and HTTPS.",
+    kind: "Learning project · DevOps",
     highlights: [
-      { value: "3", label: "independent, path-filtered pipelines" },
-      { value: ":<sha>", label: "immutable image tag behind every deploy" },
+      { value: "3", label: "GitHub Actions pipelines, one per service" },
+      { value: ":<sha>", label: "commit-tagged images on Docker Hub" },
       { value: "4", label: "containers on one private Docker network" },
     ],
     description:
-      "Production-style delivery for a Turborepo monorepo with a Next.js frontend, an Express API and a WebSocket server sharing one Prisma package. Each service has its own Docker image and GitHub Actions pipeline that builds only on relevant changes, pushes SHA-tagged images to Docker Hub and redeploys that service over SSH to a Linux VM, where Nginx terminates TLS and routes each subdomain to its container.",
+      "A hands-on project for learning CI/CD and containerisation end to end. It packages each service of a small Turborepo monorepo as its own Docker image, then uses GitHub Actions to build the images, push them to Docker Hub and deploy them over SSH to a Linux VM, where Nginx serves each one on its own subdomain over HTTPS. The apps are deliberately minimal; the pipeline and the infrastructure are the project.",
     githubUrl: "https://github.com/titanjagpreet/dockerized-turborepo-pipeline",
     nextProjectSlug: "live-cursors",
+    headings: {
+      whatItDoes: "What I set up",
+      challenges: "Problems I worked through",
+      learnings: "What I learned",
+    },
     techStack: [
       "Docker",
       "Docker Compose",
@@ -389,70 +398,76 @@ export const projects: Project[] = [
       "Docker Hub",
       "Nginx",
       "Let's Encrypt (Certbot)",
+      "Linux VM (SSH)",
       "Turborepo",
       "pnpm",
       "PostgreSQL",
       "Prisma",
-      "Next.js",
-      "Express",
-      "WebSockets",
     ],
     overview:
-      "This project is about everything that happens after git push. The application layer is deliberately small: a Next.js frontend, an Express API with sign-up and sign-in, and a WebSocket server, all using the same PostgreSQL database through a shared Prisma package in a pnpm and Turborepo workspace. The focus is how those three services are built, shipped and run.\n\nEach service has its own Dockerfile and its own GitHub Actions workflow. A push to main that touches a service rebuilds only that service, publishes an image tagged with the commit SHA and redeploys it on a Linux VM over SSH. On the VM the containers share a private Docker network with Postgres, and Nginx terminates HTTPS and routes each subdomain to the right container.",
+      "The goal was to learn how code gets from a git push to a running server without a hosting platform doing the work. To have something realistic to ship, the repository is a Turborepo monorepo with three minimal sample services (a Next.js page, an Express API with sign-up and sign-in, and a WebSocket server) that share one PostgreSQL database through a Prisma package. The services exist to be containerised and deployed; they are not the focus.\n\nEverything around them was set up by hand: a Dockerfile for each service, Docker Compose files for local and production runs, a GitHub Actions workflow per service that builds and pushes an image to Docker Hub, and an SSH deploy step that pulls the new image onto a Linux VM and recreates the container. On the VM, Nginx routes a subdomain to each container and Certbot provides the HTTPS certificates.",
     whatItDoes: [
-      "Builds a separate Docker image for the web, HTTP and WebSocket services from one Turborepo workspace",
-      "Runs one GitHub Actions workflow per service, triggered only by changes to that service, its Dockerfile or the shared packages",
-      "Publishes every image to Docker Hub tagged with both the commit SHA and latest",
-      "Deploys over SSH by pulling the exact SHA-tagged image and recreating that service's container",
-      "Applies Prisma migrations automatically when the API container starts",
-      "Serves each service on its own subdomain through Nginx, with Let's Encrypt HTTPS and proxied WebSocket upgrades",
+      "A Dockerfile for each service (web, HTTP API and WebSocket server), all built from one shared pnpm workspace",
+      "Docker Compose files for local development and for production, with every container on one private network",
+      "A PostgreSQL 17 container with a named volume, so data survives restarts and redeploys",
+      "One GitHub Actions workflow per service that runs only when that service, its Dockerfile or the shared packages change",
+      "Image publishing to Docker Hub with two tags: the commit SHA and latest",
+      "Automated deploys over SSH that pull the exact commit's image and recreate the container on the VM, with the Docker Hub and SSH credentials stored as GitHub Actions secrets",
+      "An Nginx reverse proxy with a subdomain per service, WebSocket upgrades and Let's Encrypt HTTPS through Certbot",
     ],
     technicalBreakdown: [
       {
-        title: "Build and release",
-        body: "Every Dockerfile copies the workspace manifests (the root and per-package package.json files and pnpm-lock.yaml) before the source, so the pnpm install layer stays cached until dependencies change. The Prisma client is generated at build time against a placeholder DATABASE_URL, because generation needs the variable but not a live database; the real connection string is injected at run time. Workflows use docker/build-push-action to publish turbo-web, turbo-http and turbo-ws with both :<sha> and :latest tags.",
+        title: "The CI/CD pipeline",
+        body: "Each workflow checks out the repository, logs in to Docker Hub, builds the service's image with docker/build-push-action and pushes it as turbo-<service>:<sha> and :latest. A final step connects to the VM over SSH, pulls the SHA-tagged image, stops and removes the old container and starts the new one on the shared network. Path filters keep the three pipelines independent: a frontend change ships only the frontend, while a change under packages/** rebuilds all three services.",
       },
       {
-        title: "Runtime and networking",
-        body: "Docker Compose places the four containers on a shared turbo-net network, so services reach the database by name (postgres:5432) instead of localhost. Postgres 17 keeps its data on the named volume postgres_data and exposes a pg_isready health check; the application containers use depends_on with condition: service_healthy, so they start only once the database accepts connections. The API runs prisma migrate deploy before it starts, and Nginx proxies the fe., http. and ws. subdomains to ports 3000, 3001 and 3003 with the Upgrade and Connection headers WebSockets need.",
+        title: "Containers and runtime",
+        body: "The Dockerfiles copy the workspace manifests and lockfile before the source, so the pnpm install layer stays cached until dependencies change. The Prisma client is generated at build time against a placeholder DATABASE_URL and the real one is supplied at run time. In Compose, services reach the database by name (postgres:5432) over the turbo-net network and wait for a pg_isready health check before starting, and the API runs prisma migrate deploy on startup so the schema is always current. Nginx forwards the Upgrade and Connection headers, so WebSocket traffic passes through the same proxy as HTTP.",
       },
     ],
     challengesDetail: [
       {
         title: "Rebuilding only what changed",
         content:
-          "In a monorepo, a naive pipeline rebuilds and redeploys everything on every push. Each workflow filters on its own app folder, its Dockerfile and packages/**, so a frontend change ships only the frontend while a change to the shared Prisma or UI package correctly rebuilds all three services.",
+          "In a monorepo, a naive pipeline rebuilds and redeploys everything on every push. Filtering each workflow on its own app folder, its Dockerfile and packages/** made a frontend change ship only the frontend, while a change to the shared Prisma or UI package still rebuilds all three services.",
       },
       {
-        title: "Deterministic, traceable deployments",
+        title: "Knowing exactly what is deployed",
         content:
-          "Deploying :latest makes it impossible to tell what is actually running. The deploy step pulls the image tagged with the commit SHA that triggered the workflow, so every running container maps to exactly one commit and a rollback is a redeploy of an earlier tag.",
+          "Deploying :latest makes it impossible to tell which commit is running. The deploy step pulls the image tagged with the commit SHA that triggered the workflow, so every container maps to one commit and rolling back means redeploying an earlier tag.",
       },
       {
         title: "Startup order and migrations",
         content:
-          "Containers that start before Postgres is ready crash or fail their first queries. A pg_isready health check gates the application containers, and running prisma migrate deploy in the API's start command keeps the schema current on every deploy without a manual step.",
+          "Containers that start before Postgres is ready crash or fail their first queries. A pg_isready health check now gates the application containers, and running prisma migrate deploy in the API's start command keeps the schema current on every deploy without a manual step.",
       },
       {
         title: "Prisma inside Docker builds",
         content:
-          "prisma generate needs a DATABASE_URL, but no database exists during docker build. A placeholder build argument lets the client generate while the real credentials stay out of the image and arrive only when the container runs.",
+          "prisma generate needs a DATABASE_URL, but no database exists during docker build. A placeholder build argument lets the client generate, while the real connection string is only provided when the container runs.",
       },
       {
-        title: "Proxying WebSockets through Nginx",
+        title: "WebSockets behind a reverse proxy",
         content:
-          "A plain reverse proxy breaks WebSocket connections at the upgrade handshake. Each Nginx server block uses HTTP/1.1 and forwards the Upgrade and Connection headers, so one proxy layer carries both HTTP and WebSocket traffic, with Certbot managing the certificates.",
+          "A plain reverse proxy breaks WebSocket connections at the upgrade handshake. Each Nginx server block uses HTTP/1.1 and forwards the Upgrade and Connection headers, so one proxy carries both HTTP and WebSocket traffic, with Certbot managing the certificates.",
       },
     ],
-    whoItsFor:
-      "A reference setup for developers running a JavaScript monorepo with several services who want per-service CI/CD and containerised deployments on a single VM, without the overhead of Kubernetes.",
     learnings: [
+      "How Docker layer caching works, and why manifests are copied before the source",
+      "The difference between build-time and run-time configuration, and how to keep secrets out of images",
+      "Container networking: services talk to each other by name on a shared network, not through localhost",
+      "Health checks, not sleeps, should decide startup order",
       "Path filters keep monorepo pipelines fast and deploys small",
       "Tag images by commit SHA; latest is a convenience, not a deploy target",
-      "Health checks, not sleeps, should decide startup order",
-      "Keep secrets out of images: build with placeholders, inject at run time",
-      "Stop-then-start deploys cause brief downtime; blue-green deploys are the next step",
-      "Multi-stage builds and Turbo remote caching are the next wins for image size and build time",
+      "How a reverse proxy, subdomains and TLS certificates fit together on a single VM",
+    ],
+    nextSteps: [
+      "Multi-stage Docker builds to shrink the images",
+      "Zero-downtime (blue-green) deploys instead of stop-then-start",
+      "Turbo remote caching to speed up builds",
+      "A staging environment ahead of production",
+      "Container monitoring and logs with Prometheus and Grafana",
+      "Infrastructure as code with Terraform",
     ],
   },
   {
@@ -613,11 +628,18 @@ export const projects: Project[] = [
     whoItsFor:
       "Ayurvedic brands, farmer cooperatives and regulators exploring farm-to-shelf provenance, and consumers who want proof of where a product's herbs came from.",
     learnings: [
-      "Hash-linking makes a history tamper-evident; full verification should also recompute each hash from its payload",
+      "A hash-linked log makes a supply-chain history tamper-evident without committing to a blockchain on day one",
       "Enforce permissions on the server; the UI should only reflect them",
-      "Prove the workflow on a simulated ledger before choosing a chain",
-      "File-based storage suits a prototype and is the first thing to replace",
+      "Keep authentication for the people who write records; verification pages should be public",
       "Location capture needs a graceful path for denied permissions",
+      "Proving the workflow on a simulated ledger first keeps the choice of chain open",
+    ],
+    nextSteps: [
+      "Recompute each event's hash during verification, not only check that the links match",
+      "Replace the JSON file storage with a database",
+      "Signed, expiring sessions instead of a plain session cookie",
+      "Finish the manufacturer flow: product creation and product QR pages",
+      "Anchor batch root hashes on a public blockchain network",
     ],
   },
 ];
