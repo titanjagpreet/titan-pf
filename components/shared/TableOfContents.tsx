@@ -23,25 +23,31 @@ export function TableOfContents({ items, variant = "card", title = "On this page
   const [activeId, setActiveId] = useState(items[0]?.id ?? "");
 
   useEffect(() => {
-    // Fires whenever a heading crosses the line 20% from the top (in either direction);
-    // the active item is the last heading above that line, or the first one near the top.
-    const observer = new IntersectionObserver(
-      () => {
-        const line = window.innerHeight * 0.2;
-        let current = items[0]?.id ?? "";
-        for (const item of items) {
-          const el = document.getElementById(item.id);
-          if (el && el.getBoundingClientRect().top - line <= 0) current = item.id;
-        }
-        setActiveId(current);
-      },
-      { rootMargin: "0px 0px -80% 0px" }
-    );
-    for (const item of items) {
-      const el = document.getElementById(item.id);
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
+    // The active item is the last heading above a line 20% from the top, or the first one
+    // near the top of the page. Recomputed at most once per frame on scroll and resize, so
+    // jumps (Back to top, anchor links) never leave a stale highlight.
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const line = window.innerHeight * 0.2;
+      let current = items[0]?.id ?? "";
+      for (const item of items) {
+        const el = document.getElementById(item.id);
+        if (el && el.getBoundingClientRect().top - line <= 0) current = item.id;
+      }
+      setActiveId(current);
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
   }, [items]);
 
   if (items.length === 0) return null;

@@ -41,15 +41,23 @@ export function ProjectCaseStudyView({ project, nextProject, relatedProjects }: 
   // "Challenges" repeats "Technical challenges" when both exist; keep the detailed one.
   const showShortChallenges = !!project.challenges?.length && !project.challengesDetail?.length;
 
+  // Section titles can be tailored per project (e.g. a learning project reads "What I learned").
+  const titles = {
+    whatItDoes: project.headings?.whatItDoes ?? "What it does",
+    challenges: project.headings?.challenges ?? "Technical challenges",
+    learnings: project.headings?.learnings ?? "Learnings",
+  };
+
   const toc: TocItem[] = [
     { id: "overview", text: "Overview", level: 2 },
-    project.whatItDoes?.length ? { id: "what-it-does", text: "What it does", level: 2 } : null,
+    project.whatItDoes?.length ? { id: "what-it-does", text: titles.whatItDoes, level: 2 } : null,
     project.technicalBreakdown?.length ? { id: "technical-breakdown", text: "Technical breakdown", level: 2 } : null,
-    project.challengesDetail?.length ? { id: "technical-challenges", text: "Technical challenges", level: 2 } : null,
+    project.challengesDetail?.length ? { id: "technical-challenges", text: titles.challenges, level: 2 } : null,
     project.whoItsFor ? { id: "who-its-for", text: "Who it is for", level: 2 } : null,
     project.technicalSections?.length ? { id: "deep-dive", text: "Technical deep dive", level: 2 } : null,
     showShortChallenges ? { id: "challenges", text: "Challenges", level: 2 } : null,
-    project.learnings?.length ? { id: "learnings", text: "Learnings", level: 2 } : null,
+    project.learnings?.length ? { id: "learnings", text: titles.learnings, level: 2 } : null,
+    project.nextSteps?.length ? { id: "next-steps", text: "Next steps", level: 2 } : null,
   ].filter((item): item is TocItem => item !== null);
 
   return (
@@ -161,7 +169,7 @@ export function ProjectCaseStudyView({ project, nextProject, relatedProjects }: 
 
           {project.whatItDoes && project.whatItDoes.length > 0 && (
             <Reveal as="section" id="what-it-does" className={sectionClass}>
-              <h2 className={cn(h2Class, "mb-4")}>What it does</h2>
+              <h2 className={cn(h2Class, "mb-4")}>{titles.whatItDoes}</h2>
               <Bullets items={project.whatItDoes} />
             </Reveal>
           )}
@@ -182,7 +190,7 @@ export function ProjectCaseStudyView({ project, nextProject, relatedProjects }: 
 
           {project.challengesDetail && project.challengesDetail.length > 0 && (
             <Reveal as="section" id="technical-challenges" className={sectionClass}>
-              <h2 className={cn(h2Class, "mb-8")}>Technical challenges</h2>
+              <h2 className={cn(h2Class, "mb-8")}>{titles.challenges}</h2>
               <ol className="max-w-3xl space-y-10">
                 {project.challengesDetail.map((item, i) => (
                   <li key={i} className="grid grid-cols-[2rem_1fr] gap-x-3">
@@ -237,8 +245,15 @@ export function ProjectCaseStudyView({ project, nextProject, relatedProjects }: 
 
           {project.learnings && project.learnings.length > 0 && (
             <Reveal as="section" id="learnings" className={sectionClass}>
-              <h2 className={cn(h2Class, "mb-4")}>Learnings</h2>
+              <h2 className={cn(h2Class, "mb-4")}>{titles.learnings}</h2>
               <Bullets items={project.learnings} />
+            </Reveal>
+          )}
+
+          {project.nextSteps && project.nextSteps.length > 0 && (
+            <Reveal as="section" id="next-steps" className={sectionClass}>
+              <h2 className={cn(h2Class, "mb-4")}>Next steps</h2>
+              <Bullets items={project.nextSteps} />
             </Reveal>
           )}
 

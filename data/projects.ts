@@ -10,6 +10,9 @@ import lighterPulseImage from "@/public/assets/lp-hero.png";
 import liquidationsImage from "@/public/assets/liquidations.png";
 import walletxImage from "@/public/assets/walletx-hero.png";
 import liveCursorsImage from "@/public/assets/live-cursors.png";
+import lighterOiImage from "@/public/assets/lighter-oi.png";
+import turborepoPipelineImage from "@/public/assets/turborepo-pipeline.png";
+import pramanaImage from "@/public/assets/pramana.jpg";
 
 export interface TechnicalSection {
   heading: string;
@@ -46,6 +49,10 @@ export interface Project {
   githubUrl?: string;
   whatItDoes?: string[];
   examples?: { shortcut: string; value: string }[];
+  /** Optional section titles for the case study (defaults: "What it does", "Technical challenges", "Learnings"). */
+  headings?: { whatItDoes?: string; challenges?: string; learnings?: string };
+  /** Planned improvements, shown as a "Next steps" section. */
+  nextSteps?: string[];
   technicalBreakdown?: { title: string; body: string }[];
   challengesDetail?: { title: string; content: string }[];
   whoItsFor?: string;
@@ -134,7 +141,7 @@ export const projects: Project[] = [
       "Backend service for Lighter.xyz that ingests perpetuals liquidation events over WebSockets, deduplicates noisy replay batches, aggregates notional USD into per-minute buckets in Upstash Redis, and serves a rolling 24 hour liquidation total over HTTP.",
     featured: true,
     githubUrl: "https://github.com/titanjagpreet/lighter-liquidations",
-    nextProjectSlug: "walletx",
+    nextProjectSlug: "lighter-oi",
     techStack: [
       "Node.js",
       "WebSockets (Lighter streams)",
@@ -203,6 +210,74 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "lighter-oi",
+    image: lighterOiImage,
+    title: "Lighter OI Aggregator",
+    summary:
+      "Snapshot service that totals open interest across every Lighter market every 15 minutes and serves it from one REST endpoint.",
+    kind: "Backend service",
+    highlights: [
+      { value: "15 min", label: "snapshot refresh cycle" },
+      { value: "× 2", label: "one-sided feed normalised to the two-sided total" },
+      { value: "1", label: "endpoint: GET /api/open-interest" },
+    ],
+    description:
+      "Background service for Lighter.xyz that computes total open interest across every perpetuals market. A worker takes a WebSocket snapshot every 15 minutes, normalises it to the two-sided figure Lighter shows in its own app and stores it in Upstash Redis; a stateless Express API serves it to dashboards with a single read.",
+    githubUrl: "https://github.com/titanjagpreet/lighter-oi",
+    nextProjectSlug: "walletx",
+    techStack: ["Node.js", "WebSockets (ws)", "Upstash Redis", "Express", "REST API"],
+    overview:
+      "Lighter OI Aggregator answers a question every Lighter dashboard needs: how much open interest is there across the whole exchange right now? Lighter's market-stats stream reports open interest market by market, so an exchange-wide figure means summing every market, and keeping a socket open in every client just to add those numbers up is wasteful.\n\nThe service splits the problem into two small processes. A worker connects on a schedule, reads one complete snapshot of every market, computes the total and disconnects. A stateless HTTP API reads the stored figure from Redis, so clients get the number with one request and no streaming code.",
+    whatItDoes: [
+      "Subscribes to Lighter's market_stats/all channel and reads the initial snapshot of every market",
+      "Sums open interest across all markets and doubles it, matching the two-sided total Lighter's own interface shows",
+      "Persists the result to Upstash Redis, overwriting the previous value each cycle",
+      "Repeats every 15 minutes, so newly listed or delisted markets are picked up without code changes",
+      "Serves the latest total from GET /api/open-interest, with CORS enabled for browser clients",
+    ],
+    technicalBreakdown: [
+      {
+        title: "Snapshot worker",
+        body: "Instead of holding a long-lived WebSocket, the worker opens a fresh connection each cycle, subscribes to market_stats/all and waits for the subscription snapshot. It accepts both payload shapes the channel can send (a map of market id to stats, or a single market object), keeps the latest open interest per market id, saves the doubled total once and closes the socket. A 60-second timeout guarantees a stalled connection can never block the next cycle.",
+      },
+      {
+        title: "Storage and API",
+        body: "Upstash Redis holds a single key, total_open_interest_usd, which is the only state the worker and the API share, so the two never depend on each other's memory or process. The Express server is stateless: one route reads the key and returns { total_open_interest_usd }, with failures mapped to a 500 response. One npm script starts both processes together.",
+      },
+    ],
+    challengesDetail: [
+      {
+        title: "Normalising Lighter's open-interest figure",
+        content:
+          "The market stats stream reports open interest for one side of each market, so a plain sum comes out at half the number traders see in Lighter's app. The service doubles the total once, at write time, so every consumer reads the same figure and none of them has to know about the quirk.",
+      },
+      {
+        title: "Choosing snapshots over a permanent stream",
+        content:
+          "Total open interest moves slowly compared with prices, so a permanent socket would add reconnection logic and memory for no real benefit. Reading one snapshot per cycle keeps the worker simple and cheap, and because each cycle sums whatever markets exist at that moment, listings and delistings are handled automatically.",
+      },
+      {
+        title: "Never letting one cycle block the next",
+        content:
+          "A network stall during the snapshot could leave the worker waiting indefinitely. Every cycle resolves on close, on error or after a 60-second timeout, whichever comes first, so a bad connection costs at most one refresh.",
+      },
+      {
+        title: "Handling two payload shapes",
+        content:
+          "The same channel can deliver a map of markets or a single market object depending on the message. The parser normalises both into one record keyed by market id before summing, so a market that appears in more than one message is never counted twice.",
+      },
+    ],
+    whoItsFor:
+      "Analytics dashboards, trading tools and bots that need Lighter's total open interest as a single number, without running their own WebSocket client or aggregation logic.",
+    learnings: [
+      "Match the refresh cadence to how fast the metric actually moves",
+      "Normalise upstream quirks once, at write time, not in every client",
+      "Separate processes should share state through a store, not memory",
+      "Every network wait needs a timeout",
+      "Small single-purpose services are easy to reason about and redeploy",
+    ],
+  },
+  {
     slug: "walletx",
     image: walletxImage,
     title: "WalletX",
@@ -219,7 +294,7 @@ export const projects: Project[] = [
     featured: true,
     projectUrl: "https://walletx-coral.vercel.app/",
     githubUrl: "https://github.com/titanjagpreet/walletx",
-    nextProjectSlug: "live-cursors",
+    nextProjectSlug: "dockerized-turborepo-pipeline",
     techStack: [
       "React",
       "TypeScript",
@@ -296,6 +371,106 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "dockerized-turborepo-pipeline",
+    image: turborepoPipelineImage,
+    title: "Dockerized Turborepo Pipeline",
+    summary:
+      "A learning project for CI/CD and Docker: containerised services shipped by GitHub Actions to a Linux VM behind Nginx and HTTPS.",
+    kind: "Learning project · DevOps",
+    highlights: [
+      { value: "3", label: "GitHub Actions pipelines, one per service" },
+      { value: ":<sha>", label: "commit-tagged images on Docker Hub" },
+      { value: "4", label: "containers on one private Docker network" },
+    ],
+    description:
+      "A hands-on project for learning CI/CD and containerisation end to end. It packages each service of a small Turborepo monorepo as its own Docker image, then uses GitHub Actions to build the images, push them to Docker Hub and deploy them over SSH to a Linux VM, where Nginx serves each one on its own subdomain over HTTPS. The apps are deliberately minimal; the pipeline and the infrastructure are the project.",
+    githubUrl: "https://github.com/titanjagpreet/dockerized-turborepo-pipeline",
+    nextProjectSlug: "live-cursors",
+    headings: {
+      whatItDoes: "What I set up",
+      challenges: "Problems I worked through",
+      learnings: "What I learned",
+    },
+    techStack: [
+      "Docker",
+      "Docker Compose",
+      "GitHub Actions",
+      "Docker Hub",
+      "Nginx",
+      "Let's Encrypt (Certbot)",
+      "Linux VM (SSH)",
+      "Turborepo",
+      "pnpm",
+      "PostgreSQL",
+      "Prisma",
+    ],
+    overview:
+      "The goal was to learn how code gets from a git push to a running server without a hosting platform doing the work. To have something realistic to ship, the repository is a Turborepo monorepo with three minimal sample services (a Next.js page, an Express API with sign-up and sign-in, and a WebSocket server) that share one PostgreSQL database through a Prisma package. The services exist to be containerised and deployed; they are not the focus.\n\nEverything around them was set up by hand: a Dockerfile for each service, Docker Compose files for local and production runs, a GitHub Actions workflow per service that builds and pushes an image to Docker Hub, and an SSH deploy step that pulls the new image onto a Linux VM and recreates the container. On the VM, Nginx routes a subdomain to each container and Certbot provides the HTTPS certificates.",
+    whatItDoes: [
+      "A Dockerfile for each service (web, HTTP API and WebSocket server), all built from one shared pnpm workspace",
+      "Docker Compose files for local development and for production, with every container on one private network",
+      "A PostgreSQL 17 container with a named volume, so data survives restarts and redeploys",
+      "One GitHub Actions workflow per service that runs only when that service, its Dockerfile or the shared packages change",
+      "Image publishing to Docker Hub with two tags: the commit SHA and latest",
+      "Automated deploys over SSH that pull the exact commit's image and recreate the container on the VM, with the Docker Hub and SSH credentials stored as GitHub Actions secrets",
+      "An Nginx reverse proxy with a subdomain per service, WebSocket upgrades and Let's Encrypt HTTPS through Certbot",
+    ],
+    technicalBreakdown: [
+      {
+        title: "The CI/CD pipeline",
+        body: "Each workflow checks out the repository, logs in to Docker Hub, builds the service's image with docker/build-push-action and pushes it as turbo-<service>:<sha> and :latest. A final step connects to the VM over SSH, pulls the SHA-tagged image, stops and removes the old container and starts the new one on the shared network. Path filters keep the three pipelines independent: a frontend change ships only the frontend, while a change under packages/** rebuilds all three services.",
+      },
+      {
+        title: "Containers and runtime",
+        body: "The Dockerfiles copy the workspace manifests and lockfile before the source, so the pnpm install layer stays cached until dependencies change. The Prisma client is generated at build time against a placeholder DATABASE_URL and the real one is supplied at run time. In Compose, services reach the database by name (postgres:5432) over the turbo-net network and wait for a pg_isready health check before starting, and the API runs prisma migrate deploy on startup so the schema is always current. Nginx forwards the Upgrade and Connection headers, so WebSocket traffic passes through the same proxy as HTTP.",
+      },
+    ],
+    challengesDetail: [
+      {
+        title: "Rebuilding only what changed",
+        content:
+          "In a monorepo, a naive pipeline rebuilds and redeploys everything on every push. Filtering each workflow on its own app folder, its Dockerfile and packages/** made a frontend change ship only the frontend, while a change to the shared Prisma or UI package still rebuilds all three services.",
+      },
+      {
+        title: "Knowing exactly what is deployed",
+        content:
+          "Deploying :latest makes it impossible to tell which commit is running. The deploy step pulls the image tagged with the commit SHA that triggered the workflow, so every container maps to one commit and rolling back means redeploying an earlier tag.",
+      },
+      {
+        title: "Startup order and migrations",
+        content:
+          "Containers that start before Postgres is ready crash or fail their first queries. A pg_isready health check now gates the application containers, and running prisma migrate deploy in the API's start command keeps the schema current on every deploy without a manual step.",
+      },
+      {
+        title: "Prisma inside Docker builds",
+        content:
+          "prisma generate needs a DATABASE_URL, but no database exists during docker build. A placeholder build argument lets the client generate, while the real connection string is only provided when the container runs.",
+      },
+      {
+        title: "WebSockets behind a reverse proxy",
+        content:
+          "A plain reverse proxy breaks WebSocket connections at the upgrade handshake. Each Nginx server block uses HTTP/1.1 and forwards the Upgrade and Connection headers, so one proxy carries both HTTP and WebSocket traffic, with Certbot managing the certificates.",
+      },
+    ],
+    learnings: [
+      "How Docker layer caching works, and why manifests are copied before the source",
+      "The difference between build-time and run-time configuration, and how to keep secrets out of images",
+      "Container networking: services talk to each other by name on a shared network, not through localhost",
+      "Health checks, not sleeps, should decide startup order",
+      "Path filters keep monorepo pipelines fast and deploys small",
+      "Tag images by commit SHA; latest is a convenience, not a deploy target",
+      "How a reverse proxy, subdomains and TLS certificates fit together on a single VM",
+    ],
+    nextSteps: [
+      "Multi-stage Docker builds to shrink the images",
+      "Zero-downtime (blue-green) deploys instead of stop-then-start",
+      "Turbo remote caching to speed up builds",
+      "A staging environment ahead of production",
+      "Container monitoring and logs with Prometheus and Grafana",
+      "Infrastructure as code with Terraform",
+    ],
+  },
+  {
     slug: "live-cursors",
     image: liveCursorsImage,
     title: "Live Cursors",
@@ -312,7 +487,7 @@ export const projects: Project[] = [
     featured: true,
     githubUrl: "https://github.com/titanjagpreet/live-cursors",
     /* Add projectUrl when the client is deployed publicly */
-    nextProjectSlug: "lighterpulse",
+    nextProjectSlug: "pramana",
     techStack: [
       "Node.js",
       "WebSocket (ws)",
@@ -380,6 +555,91 @@ export const projects: Project[] = [
       "Broadcast systems scale linearly (O(n))",
       "GPU transforms outperform layout updates",
       "Real-time UX depends on perception, not raw speed",
+    ],
+  },
+  {
+    slug: "pramana",
+    image: pramanaImage,
+    title: "Pramana",
+    summary:
+      "Farm-to-formulation traceability for Ayurvedic herbs: geotagged custody events, hash-linked into a chain anyone can verify from a QR code.",
+    kind: "Full-stack prototype",
+    highlights: [
+      { value: "SHA-256", label: "hash-linked chain of custody" },
+      { value: "3 roles", label: "farmer, transporter, manufacturer" },
+      { value: "QR", label: "public verification, no sign-in" },
+    ],
+    description:
+      "Traceability prototype for the Ayurvedic herb supply chain. Farmers register geotagged harvest batches, supply-chain actors append custody events, and every event is SHA-256 hash-linked to the one before it, so anyone who scans a batch's QR code sees its full journey on a timeline and a map, together with a check that the chain is unbroken.",
+    githubUrl: "https://github.com/titanjagpreet/pramana",
+    nextProjectSlug: "lighterpulse",
+    techStack: [
+      "Next.js 13 (App Router)",
+      "TypeScript",
+      "Tailwind CSS",
+      "shadcn/ui",
+      "Leaflet",
+      "SHA-256 (Node crypto)",
+      "bcrypt",
+      "QR codes",
+    ],
+    overview:
+      "Ayurvedic products depend on where and how their herbs were grown, but that history is usually lost somewhere between the farm and the shelf. Pramana (Sanskrit for \"proof\") records it as a chain of custody: a farmer registers a harvest with GPS coordinates, soil type and organic certification, and everyone who handles the batch afterwards adds an event with their own location, checkpoint and notes.\n\nEach event stores the hash of the event before it, so the history behaves like a ledger: removing or reordering a step breaks the chain. A public batch page, opened from the batch's QR code, shows the journey as a timeline and a map and verifies the chain before marking it as trusted. The ledger is deliberately simulated, with SHA-256 hash links and generated transaction ids, to prove the workflow before committing to a real blockchain network.",
+    whatItDoes: [
+      "Lets farmers register herb batches with live GPS coordinates, harvest date, quantity, soil type and organic certificate number",
+      "Generates a QR code for every batch that opens its public traceability page",
+      "Lets transporters record pickup, transport and quality-check events with location, vehicle, checkpoint and condition notes",
+      "Enforces role permissions on the server, so each actor can only record the event types that belong to their role",
+      "Links every event to the previous one with a SHA-256 hash and verifies the chain on the public page",
+      "Shows the batch's journey as a step-by-step timeline and a Leaflet map connecting every recorded location",
+    ],
+    technicalBreakdown: [
+      {
+        title: "Application",
+        body: "Built on the Next.js 13 App Router with TypeScript, Tailwind CSS and shadcn/ui. Each role has its own dashboard, protected by middleware that requires a session cookie, while batch pages and the API stay public so a QR scan works for anyone. Passwords are hashed with bcrypt. Dashboards use the browser's Geolocation API with permission tracking and a manual-coordinates fallback, and the journey map loads react-leaflet on the client only, avoiding server-rendering issues.",
+      },
+      {
+        title: "Integrity layer",
+        body: "Each event is assembled from its actor, type, location, timestamp and metadata, then hashed with SHA-256 together with the previous event's hash, so every record commits to the entire history before it. Batches also carry a root hash of the original harvest record. A verification endpoint walks the chain and returns whether it is continuous and, if not, the index where it breaks. Records are stored as JSON files and each event is logged as a simulated transaction with a generated id, which keeps the prototype self-contained.",
+      },
+    ],
+    challengesDetail: [
+      {
+        title: "Making tampering visible",
+        content:
+          "A supply-chain record is only useful if changes to it can be detected. Hash-linking each event to its predecessor means a removed or reordered step breaks the chain, and the verification endpoint reports exactly where, so the public page can flag a broken history instead of quietly displaying it.",
+      },
+      {
+        title: "Trust boundaries between roles",
+        content:
+          "A transporter must not be able to record a harvest, and a farmer must not be able to mark a batch as processed. Permissions are checked in the API against the stored user's role rather than in the UI, so a forged request is rejected with a 403.",
+      },
+      {
+        title: "Capturing location in the field",
+        content:
+          "Location is the core of every event, but browsers expose GPS only on secure origins and only after the user grants permission. Dashboards track the permission state, explain what is needed and fall back to manually entered coordinates, so a denied prompt never blocks the workflow.",
+      },
+      {
+        title: "Public verification without accounts",
+        content:
+          "Consumers scanning a QR code should not need an account. Middleware protects only the role dashboards and leaves batch pages and the API open, so verification works for anyone with the link.",
+      },
+    ],
+    whoItsFor:
+      "Ayurvedic brands, farmer cooperatives and regulators exploring farm-to-shelf provenance, and consumers who want proof of where a product's herbs came from.",
+    learnings: [
+      "A hash-linked log makes a supply-chain history tamper-evident without committing to a blockchain on day one",
+      "Enforce permissions on the server; the UI should only reflect them",
+      "Keep authentication for the people who write records; verification pages should be public",
+      "Location capture needs a graceful path for denied permissions",
+      "Proving the workflow on a simulated ledger first keeps the choice of chain open",
+    ],
+    nextSteps: [
+      "Recompute each event's hash during verification, not only check that the links match",
+      "Replace the JSON file storage with a database",
+      "Signed, expiring sessions instead of a plain session cookie",
+      "Finish the manufacturer flow: product creation and product QR pages",
+      "Anchor batch root hashes on a public blockchain network",
     ],
   },
 ];
